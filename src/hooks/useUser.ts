@@ -1,15 +1,6 @@
-import { registerUser, loginUser, type LoginResponse } from '@/components/api/auth';
-import { 
-  getAllUsers, 
-  getUserById, 
-  createUser, 
-  updateUser, 
-  deleteUser, 
-  getUsersByRole,
-  updateUserStatus,
-  resetUserPassword
-} from '@/api/users';
+import { registerUser, loginUser } from '@/components/api/auth';
 import { useMutation, type UseMutationResult, useQueryClient, useQuery, type UseQueryResult } from '@tanstack/react-query';
+import { API_URL } from '@/components/api/url';
 // import { createUserApi } from '@/components/'; 
 
 // Define the type for the user data
@@ -29,14 +20,14 @@ export interface TUserRegister {
   password: string;
   address: string;
   phoneNumber: string;
-}   
+}
 // Define the type for the user login data
 export interface TUserLogin {
   email: string;
   password: string;
 }
 //  hook to create a user 
-export const  useCreateUser = (): UseMutationResult<TUser, Error, TUserRegister> => {
+export const useCreateUser = (): UseMutationResult<TUser, Error, TUserRegister> => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (user: TUserRegister) => registerUser(user),
@@ -47,114 +38,175 @@ export const  useCreateUser = (): UseMutationResult<TUser, Error, TUserRegister>
 }
 
 // Hook to login a user
-export const useLoginUser = (): UseMutationResult<LoginResponse, Error, TUserLogin> => {
+export const useLoginUser = (): UseMutationResult<TUser, Error, TUserLogin> => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (user: TUserLogin) => loginUser(user),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] })
+    mutationFn: async (user: TUserLogin) => {
+      const result = await loginUser(user);
+      console.log('Login mutation result:', result);
+      return result;
+    },
+    onSuccess: (user) => {
+      console.log('Login successful, user:', user);
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['auth'] });
+    },
+    onError: (error) => {
+      console.error('Login failed:', error);
     }
-  })
+  });
+};
+
+// Helper function to handle API responses
+const handleApiResponse = async (response: Response) => {
+  if (!response.ok) {
+    let errorMessage = `Request failed with status ${response.status}: ${response.statusText}`;
+
+    try {
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      } else {
+        const errorText = await response.text();
+        if (errorText) {
+          errorMessage = errorText;
+        }
+      }
+    } catch (parseError) {
+      console.warn('Failed to parse error response:', parseError);
+    }
+
+    throw new Error(errorMessage);
+  }
+  return response;
+};
+
+// Admin function to fetch all users (replaces useGetUsers for admin use)
+export const userService = () => {
+  return useQuery({
+    queryKey: ['users'],
+    queryFn: async () => {
+      const response = await fetch(`${API_URL}/users`);
+      await handleApiResponse(response);
+      const data = await response.json();
+
+      // Handle wrapped response (e.g., { success: true, data: [...] })
+      if (data.data && Array.isArray(data.data)) {
+        return data.data;
+      }
+
+      // Handle direct array response
+      if (Array.isArray(data)) {
+        return data;
+      }
+
+      return [];
+    },
+  });
+};
+
+// Hook to create a user (admin function)
+export const useCreateUserAdmin = (): UseMutationResult<TUser, Error, TUserRegister> => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (user: TUserRegister) => {
+      const response = await fetch(`${API_URL}/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(user),
+      });
+
+      await handleApiResponse(response);
+      const data = await response.json();
+
+      // Handle wrapped response
+      if (data.data) {
+        return data.data;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    }
+  });
 }
 
-// Hook to fetch all users (using the new API)
-export const userService = () => {
-    const { data, isLoading, isError, error } = useQuery({
-        queryKey: ['users'],
-        queryFn: getAllUsers,
-        // refetchOnWindowFocus: false,
-    });
+// Hook to fetch all users (for display)
+export const useGetUsers = (): UseQueryResult<TUser[], Error> => {
+  return useQuery({
+    queryKey: ['users'],
+    queryFn: async () => {
 
-    return { data, isLoading, isError, error };
+      const response = await fetch(`${API_URL}/users`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+      return response.json();
+    },
+  });
 };
 
-// Update user hook
-export const useUpdateUser = (): UseMutationResult<TUser, unknown, {id: string; user: TUser}> => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: ({id, user}) => updateUser(id, user),
-        onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ['users'] });
-            queryClient.setQueryData(['users', data.id], data);
+// Hook to fetch a single user by ID
+export const useGetUser = (userId: string): UseQueryResult<TUser, Error> => {
+  return useQuery({
+    queryKey: ['user', userId],
+    queryFn: async () => {
+      // Replace with your actual API call to fetch a single user
+      const response = await fetch(`${API_URL}/users/${userId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch user');
+      }
+      return response.json();
+    },
+    enabled: !!userId,
+  });
+};
+//  hook to update user (corrected to mutation)
+export const useUpdateUser = (): UseMutationResult<TUser, Error, { id: string; user: TUser }> => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, user }: { id: string; user: TUser }) => {
+      const response = await fetch(`${API_URL}/users/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        onError: (error) => {
-            console.error('Error updating user:', error);
-        }
-    }); 
+        body: JSON.stringify(user),
+      });
+
+      await handleApiResponse(response);
+      const data = await response.json();
+
+      // Handle wrapped response
+      if (data.data) {
+        return data.data;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    }
+  });
 };
 
-// Delete user hook
-export const useDeleteUser = (): UseMutationResult<void, unknown, string> => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: (id) => deleteUser(id),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['users'] });
-        },
-        onError: (error) => {
-            console.error('Error deleting user:', error);
-        }
-    });
-};
+//  hook to delete user (corrected to mutation)
+export const useDeleteUser = (): UseMutationResult<void, Error, string> => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`${API_URL}/users/${id}`, {
+        method: 'DELETE',
+      });
 
-// Create user hook (updated to use new API)
-export const useCreateUserAdmin = (): UseMutationResult<TUser, unknown, TUserRegister> => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: (user) => createUser(user),
-        onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ['users'] });
-            queryClient.setQueryData(['users', data.id], data);
-        },
-        onError: (error) => {
-            console.error('Error creating user:', error);
-        }
-    });
-};
-
-// Get user by id hook
-export const useGetUserById = (id: string): UseQueryResult<TUser | undefined, Error> => {
-    return useQuery({
-        queryKey: ['users', id],
-        queryFn: () => getUserById(id),
-        enabled: !!id, // Only run the query if id is provided
-    });
-};
-
-// Get users by role hook
-export const useGetUsersByRole = (role: string): UseQueryResult<TUser[], Error> => {
-    return useQuery({
-        queryKey: ['users', 'role', role],
-        queryFn: () => getUsersByRole(role),
-        enabled: !!role, // Only run the query if role is provided
-    });
-};
-
-// Update user status hook
-export const useUpdateUserStatus = (): UseMutationResult<TUser, unknown, {id: string; status: 'active' | 'inactive'}> => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: ({id, status}) => updateUserStatus(id, status),
-        onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ['users'] });
-            queryClient.setQueryData(['users', data.id], data);
-        },
-        onError: (error) => {
-            console.error('Error updating user status:', error);
-        }
-    });
-};
-
-// Reset user password hook
-export const useResetUserPassword = (): UseMutationResult<void, unknown, {id: string; password: string}> => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: ({id, password}) => resetUserPassword(id, password),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['users'] });
-        },
-        onError: (error) => {
-            console.error('Error resetting user password:', error);
-        }
-    });
+      await handleApiResponse(response);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    }
+  });
 };

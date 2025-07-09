@@ -87,8 +87,7 @@ export const AdminSidebar = () => {
       path: "/admin/products",
       subItems: [
         { name: "All Products", path: "/admin/products" },
-        // { name: "Add Product", path: "/admin/products/add" },
-        // { name: "Categories", path: "/admin/products/categories" },
+    
       ],
     },
     {
@@ -117,8 +116,7 @@ export const AdminSidebar = () => {
       path: "/admin/settings",
       subItems:[
         { name: "Profile", path: "/admin/settings/profile" },
-        { name: "Account", path: "/admin/settings/account" },
-        { name: "Notifications", path: "/admin/settings/notifications" },
+   
       ]
     },
   ];

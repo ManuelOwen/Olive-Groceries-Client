@@ -3,7 +3,6 @@ import { useForm } from '@tanstack/react-form'
 import type { AnyFieldApi } from '@tanstack/react-form'
 import { useCreateUser } from '@/hooks/useUser'
 import { Toaster, toast } from 'sonner'
-import { useAuthStore } from '@/stores/authStore'
 
 export const Route = createFileRoute('/signin')({
   component: RouteComponent,
@@ -27,9 +26,6 @@ function RouteComponent() {
   
   // Use navigate hook for programmatic navigation
   const navigate = useNavigate();
-  
-  // Use auth store
-  const { login, setLoading, setError, clearError } = useAuthStore();
 
   const form = useForm({
     defaultValues: {
@@ -43,22 +39,24 @@ function RouteComponent() {
       try {
         console.log('Submitting form with data:', value);
         
-        // Set loading state
-        setLoading(true);
-        clearError();
-        
         // Call the mutation to register the user
         const result = await createUserMutation.mutateAsync(value);
         console.log('User registered successfully:', result);
         
-        // Reset form after successful registration
+        // Optional: Reset form after successful registration
         form.reset();
         
-        // Store user data in auth store (registration doesn't return a token)
-        login(result, '');
-        
-        // Redirect all users to products page after signup
-        navigate({ to: '/products' });
+        // Check for the roles and navigate them to their respective dashboards
+        if (result.role === 'admin') {
+          navigate({ to: '/admin' });
+        } else if (result.role === 'user') {
+          navigate({ to: '/dashboard' }); // Using existing dashboard route for users
+        } else if (result.role === 'driver') {
+          navigate({ to: '/dashboard' }); // Using existing dashboard route for drivers
+        } else {
+          // Default to dashboard if role is undefined or unknown
+          navigate({ to: '/dashboard' });
+        }
 
         // Show success toast
         toast.success('Registration successful!', {
@@ -72,10 +70,8 @@ function RouteComponent() {
           error: error
         });
         
-        // Set error state in auth store
+        // Check if the error is due to user already existing
         const errorMessage = error instanceof Error ? error.message : 'Registration failed';
-        setError(errorMessage);
-        setLoading(false);
         
         if (errorMessage.includes('already exists') || errorMessage.includes('duplicate') || errorMessage.includes('email')) {
           toast.error('User already exists', {
@@ -274,26 +270,25 @@ return (
         </div>
 
         {/* Submit */}
-        <div className="flex justify-center">
-  <form.Subscribe
-    selector={(state) => [state.canSubmit, state.isSubmitting]}
-  >
-    {([canSubmit, isSubmitting]) => (
-      <button
-        type="submit"
-        disabled={!canSubmit || createUserMutation.isPending}
-        className={`w-2/4 py-2 px-4 text-white font-semibold rounded-lg transition cursor-pointer ${
-          canSubmit && !createUserMutation.isPending
-            ? 'bg-orange-400 hover:bg-orange-500'
-            : 'bg-orange-200 cursor-not-allowed'
-        }`}
-      >
-        {isSubmitting || createUserMutation.isPending ? 'Registering...' : 'Sign Up'}
-      </button>
-    )}
-  </form.Subscribe>
-</div>
-
+        <form.Subscribe
+          selector={(state) => [state.canSubmit, state.isSubmitting]}
+        >
+          {([canSubmit, isSubmitting]) => (
+            <button
+            
+              type="submit"
+              disabled={!canSubmit || createUserMutation.isPending}
+              className={`w-2/4 py-2 px-4 text-white font-semibold rounded-lg transition cursor-pointer ${
+                canSubmit && !createUserMutation.isPending
+                  ? 'bg-orange-400 hover:bg-orange-500'
+                  : 'bg-orange-200 cursor-not-allowed'
+              }`}
+            >
+              {isSubmitting || createUserMutation.isPending ? 'Registering...' : 'Sign Up'}
+            </button>
+            
+          )}
+        </form.Subscribe>
         <h3>Already Have an Account?   <Link className="text-orange-400 hover:underline" to="/login">Login</Link></h3>
       </form>
     </div>

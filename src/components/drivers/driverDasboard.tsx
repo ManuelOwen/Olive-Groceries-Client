@@ -87,7 +87,7 @@ export const DriverSidebar = () => {
       subItems: [
         { name: "All Products", path: "/products" },
         { name: "My Deliveries", path: "/driver/dashboard" },
-        { name: "Categories", path: "/products" },
+        // { name: "Categories", path: "/products" },
       ],
     },
   
@@ -97,12 +97,12 @@ export const DriverSidebar = () => {
       path: "/driver/dashboard",
       subItems: [
         { name: "My Deliveries", path: "/driver/dashboard" },
-        { name: "Pending", path: "/driver/dashboard" },
-        { name: "Confirmed", path: "/driver/dashboard" },
-        {name: "Cancelled", path: "/driver/dashboard" },
-        { name: "Delivered", path: "/driver/dashboard" },
-        { name: "Processing", path: "/driver/dashboard" },
-        {name:"Shipped", path: "/driver/dashboard" },
+      //   { name: "Pending", path: "/driver/dashboard" },
+      //   { name: "Confirmed", path: "/driver/dashboard" },
+      //   {name: "Cancelled", path: "/driver/dashboard" },
+      //   { name: "Delivered", path: "/driver/dashboard" },
+      //   { name: "Processing", path: "/driver/dashboard" },
+      //   {name:"Shipped", path: "/driver/dashboard" },
       ],
     },
   
@@ -112,8 +112,8 @@ export const DriverSidebar = () => {
       path: "/driver/dashboard",
       subItems:[
         { name: "Profile", path: "/driver/dashboard" },
-        { name: "Account", path: "/driver/dashboard" },
-        { name: "Notifications", path: "/driver/dashboard" },
+        // { name: "Account", path: "/driver/dashboard" },
+        // { name: "Notifications", path: "/driver/dashboard" },
       ]
     },
   ];

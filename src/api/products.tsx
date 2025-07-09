@@ -1,7 +1,7 @@
 // Product interfaces
 export interface TProduct {
     id: number;
-    name: string;
+    product_name: string;
     description?: string;
     price: number;
     category: string;
@@ -14,7 +14,7 @@ export interface TProduct {
 }
 
 export interface TProductCreate {
-    name: string;
+    product_name: string;
     description?: string;
     price: number;
     category: string;

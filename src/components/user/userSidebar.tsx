@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router';
 import {
   LayoutDashboard,
   ShoppingCart,
-  Users,
+  // Users,
   Package,
   Settings,
   Bell,
@@ -87,8 +87,8 @@ export const UserSidebar = () => {
       path: "/products",
       subItems: [
         { name: "All Products", path: "/products" },
-        { name: "My Orders", path: "/dashboard/user" },
-        { name: "Categories", path: "/products" },
+        // { name: "My Orders", path: "/dashboard/user" },
+        // { name: "Categories", path: "/products" },
       ],
     },
     {
@@ -97,12 +97,12 @@ export const UserSidebar = () => {
       path: "/dashboard/user",
       subItems: [
         { name: "My Orders", path: "/dashboard/user" },
-        { name: "Pending", path: "/dashboard/user" },
-        { name: "Confirmed", path: "/dashboard/user" },
-        {name: "Cancelled", path: "/dashboard/user" },
-        { name: "Delivered", path: "/dashboard/user" },
-        { name: "Processing", path: "/dashboard/user" },
-        {name:"Shipped", path: "/dashboard/user" },
+        // { name: "Pending", path: "/dashboard/user" },
+        // { name: "Confirmed", path: "/dashboard/user" },
+        // {name: "Cancelled", path: "/dashboard/user" },
+        // { name: "Delivered", path: "/dashboard/user" },
+        // { name: "Processing", path: "/dashboard/user" },
+        // {name:"Shipped", path: "/dashboard/user" },
       ],
     },
   
@@ -112,8 +112,8 @@ export const UserSidebar = () => {
       path: "/dashboard/user",
       subItems:[
         { name: "Profile", path: "/dashboard/user" },
-        { name: "Account", path: "/dashboard/user" },
-        { name: "Notifications", path: "/dashboard/user" },
+        // { name: "Account", path: "/dashboard/user" },
+        // { name: "Notifications", path: "/dashboard/user" },
       ]
     },
   ];

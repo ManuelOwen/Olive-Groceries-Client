@@ -23,6 +23,7 @@ import {
   MapPin
 } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
+import { LayoutWithSidebar } from '@/components/LayoutWithSidebar';
 
 export const Route = createFileRoute('/admin/users')({
   component: AdminUsersComponent,
@@ -193,10 +194,11 @@ function AdminUsersComponent() {
   }
 
   return (
-    <>
-      <Toaster position="top-right" richColors closeButton />
-      
-      <div className="space-y-6">
+    <LayoutWithSidebar>
+      <div className="p-6">
+        <h1 className="text-2xl font-bold mb-4">Users</h1>
+        <Toaster position="top-right" richColors closeButton />
+        
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -571,7 +573,7 @@ function AdminUsersComponent() {
           </div>
         </div>
       )}
-    </>
+    </LayoutWithSidebar>
   );
 }
 

@@ -1,12 +1,6 @@
 import { API_URL } from '@/components/api/url';
 import type { TUser } from '@/hooks/useUser';
 
-// Define the login response type
-export interface LoginResponse {
-  user: TUser;
-  token: string;
-}
-
 //  helper functions to handle errors
 const handleApiResponse = async (response: Response) => {
   if (!response.ok) {
@@ -61,7 +55,7 @@ export const registerUser = async (userData: {
 export const loginUser = async (userData: {
   email: string;
   password: string;
-}): Promise<LoginResponse> => {
+}): Promise<TUser> => {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: {
@@ -72,23 +66,79 @@ export const loginUser = async (userData: {
 
   await handleApiResponse(response);
   const data = await response.json();
-  console.log('Login API response:', data);
-  
-  // Handle different response formats
-  if (data.token && data.user) {
-    // If the API returns { user: {...}, token: "..." }
-    console.log('Login response format: { user, token }');
-    return data;
-  } else if (data.token) {
-    // If the API returns { id, email, role, token, ... }
-    console.log('Login response format: { ...userData, token }');
-    const { token, ...userData } = data;
-    return { user: userData, token };
+
+  // Debug: Log the actual response from the server
+  console.log('Raw login API response:', data);
+  console.log('Response keys:', Object.keys(data));
+
+  // Handle different response formats from the API
+  let user: TUser;
+  let token: string;
+
+  if (data.data && data.token) {
+    // Format: { success: true, data: user, token: "..." }
+    user = data.data;
+    token = data.token;
+  } else if (data.user && data.token) {
+    // Format: { user: {...}, token: "..." }
+    user = data.user;
+    token = data.token;
+  } else if (data.token && (data.id || data.email)) {
+    // Format: { id, email, role, ..., token }
+    token = data.token;
+    user = { ...data };
+    delete (user as any).token; // Remove token from user object
+  } else if (data.access_token) {
+    // Format: { access_token: "...", user: {...} } or { access_token: "...", id, email, ... }
+    token = data.access_token;
+    user = data.user || data;
+  } else if (data.accessToken) {
+    // Format: { accessToken: "...", refreshToken: "...", role: "...", id: ... }
+    token = data.accessToken;
+    // Build user object from the response data
+    user = {
+      id: data.id?.toString() || '',
+      email: data.email || userData.email || '', // Use login email as fallback
+      fullName: data.fullName || data.name || data.username || 'User',
+      address: data.address || '',
+      phoneNumber: data.phoneNumber || data.phone || '',
+      role: data.role || 'user'
+    };
+    console.log('AccessToken format detected. Built user object:', user);
   } else {
-    // Fallback: assume the entire response is user data and no token
-    console.warn('No token found in login response, using user data only');
-    console.log('Login response format: user data only');
-    return { user: data, token: '' };
+    // Fallback - assume data is the user and look for token in various possible field names
+    user = data;
+    token = data.token ||
+      data.access_token ||
+      data.accessToken ||
+      data.auth_token ||
+      data.authToken ||
+      data.jwt ||
+      data.JWT ||
+      data.bearer_token ||
+      data.bearerToken ||
+      '';
   }
+
+  console.log('Extracted login data:', {
+    user: user ? { id: user.id, email: user.email, role: user.role } : 'NO_USER',
+    token: token ? 'TOKEN_PRESENT' : 'NO_TOKEN',
+    tokenLength: token ? token.length : 0
+  });
+
+  if (!token) {
+    console.error('Token extraction failed. Available fields in response:', Object.keys(data));
+    console.error('Full response data:', JSON.stringify(data, null, 2));
+    throw new Error(`No authentication token received from server. Response contained: ${Object.keys(data).join(', ')}`);
+  }
+
+  // Import the auth store and save the user and token
+  const { useAuthStore } = await import('@/stores/authStore');
+  const { login } = useAuthStore.getState();
+
+  // Save user and token to the store
+  login(user, token);
+
+  return user;
 };
 

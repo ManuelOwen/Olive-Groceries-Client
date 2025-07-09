@@ -41,13 +41,14 @@ export const AuthTestComponent = () => {
       };
       
       console.log('Attempting login with:', loginData);
-      const result = await loginUser(loginData);
+      type LoginResult = { user?: any; token?: string };
+      const result = await loginUser(loginData) as LoginResult;
       console.log('Login API Response:', result);
       console.log('Response type:', typeof result);
       console.log('Has user property:', 'user' in result);
       console.log('Has token property:', 'token' in result);
       
-      if ('token' in result && result.token) {
+      if (typeof result.token === 'string' && result.token) {
         console.log('✅ Token found in response:', result.token.substring(0, 20) + '...');
       } else {
         console.log('❌ No token found in response');
