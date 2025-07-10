@@ -149,12 +149,24 @@ function AdminOrdersComponent() {
 
   const handleUpdate = async () => {
     if (!selectedOrder) return;
-    
     try {
-      console.log(selectedOrder)
+      // Only send allowed fields for update
+      const allowedFields = [
+        'order_number',
+        'total_amount',
+        'status',
+        'priority',
+        'shipping_address',
+        'billing_address',
+        'user_id',
+      ];
+      const updatePayload = Object.fromEntries(
+        Object.entries(formData).filter(([key]) => allowedFields.includes(key))
+      );
+      console.log('Updating order with priority:', formData.priority);
       await updateOrderMutation.mutateAsync({
         id: selectedOrder.id.toString(),
-        order: { ...selectedOrder, ...formData } as TOrders
+        order: updatePayload as any,
       });
       setShowEditModal(false);
       setSelectedOrder(null);
@@ -494,7 +506,7 @@ function AdminOrdersComponent() {
                     <label className="block text-sm font-medium text-gray-700">Status</label>
                     <select
                       value={formData.status || OrderStatus.Pending}
-                      onChange={(e) => setFormData({...formData, status: parseInt(e.target.value) as OrderStatus})}
+                      onChange={(e) => setFormData({...formData, status: e.target.value as OrderStatus})}
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
                     >
                       <option value={OrderStatus.Pending}>Pending</option>
@@ -587,7 +599,7 @@ function AdminOrdersComponent() {
                     <label className="block text-sm font-medium text-gray-700">Status</label>
                     <select
                       value={formData.status || OrderStatus.Pending}
-                      onChange={(e) => setFormData({...formData, status: parseInt(e.target.value) as OrderStatus})}
+                      onChange={(e) => setFormData({...formData, status: e.target.value as OrderStatus})}
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
                     >
                       <option value={OrderStatus.Pending}>Pending</option>

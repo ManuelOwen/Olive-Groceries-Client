@@ -1,15 +1,16 @@
 export enum OrderStatus {
-    Pending = 0,
-    Processing = 1,
-    Shipped = 2,
-    Delivered = 3,
-    Cancelled = 4
+    Pending = "pending",
+    Confirmed = "confirmed",
+    Processing = "processing",
+    Shipped = "shipped",
+    Delivered = "delivered",
+    Cancelled = "cancelled"
 }
 export enum OrderPriority {
-    Low = 'Low',
-    Medium = 'Medium',
-    High = 'High',
-    Urgent = 'Urgent'
+    Low = "low",
+    Medium = "normal",
+    High = "high",
+    Urgent = "urgent"
 }
 export enum userRole {
     Admin = 'admin',
@@ -42,4 +43,15 @@ export interface TOrders {
         fullName: string;
         email: string;
     };
+}
+
+export enum productCategory {
+    FRUIT = 'fruit',
+    VEGETABLE = 'vegetable',
+    DAIRY = 'dairy',
+    BAKERY = 'bakery',
+    MEAT = 'meat',
+    SEAFOOD = 'seafood',
+    BEVERAGE = 'beverage',
+    SNACK = 'snack',
 }

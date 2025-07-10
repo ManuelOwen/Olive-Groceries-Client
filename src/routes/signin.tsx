@@ -55,7 +55,7 @@ function RouteComponent() {
           navigate({ to: '/dashboard' }); // Using existing dashboard route for drivers
         } else {
           // Default to dashboard if role is undefined or unknown
-          navigate({ to: '/dashboard' });
+          navigate({ to: '/products' });
         }
 
         // Show success toast

@@ -8,7 +8,7 @@ import {
   type TProduct,
   type TProductCreate,
 } from '@/hooks/useProducts'
-import { useAuthStore, isAdmin } from '@/stores/authStore'
+import { useAuthStore, isAdmin, getToken } from '@/stores/authStore'
 import {
   Plus,
   Edit,
@@ -18,28 +18,15 @@ import {
   Search,
   Filter,
   Package,
-  DollarSign,
+  // DollarSign,
 } from 'lucide-react'
 import { Toaster, toast } from 'sonner'
 import { LayoutWithSidebar } from '@/components/LayoutWithSidebar';
+import { productCategory } from '@/interfaces/orderInterface';
 
 export const Route = createFileRoute('/admin/products')({
   component: AdminProductsComponent,
 })
-
-async function uploadImage(file: File): Promise<string> {
-  const formData = new FormData();
-  formData.append('image', file);
-  const response = await fetch('http://localhost:8000/api/v1/upload', {
-    method: 'POST',
-    body: formData,
-  });
-  if (!response.ok) {
-    throw new Error('Image upload failed');
-  }
-  const data = await response.json();
-  return data.url; // Adjust if your backend returns a different property
-}
 
 function AdminProductsComponent() {
   const { data: products = [], isLoading, isError, error } = productService()
@@ -84,6 +71,9 @@ function AdminProductsComponent() {
     inStock: true,
     stock_quantity: 0,
   })
+
+  // Add to component state:
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   // Filter and search products
   const filteredProducts = Array.isArray(products)
@@ -158,81 +148,100 @@ function AdminProductsComponent() {
 
   // CRUD Operations
   const handleCreate = async () => {
-    if (!isAuthenticated || !token) {
-      toast.error('Please log in to perform this action')
-      return
+    if (!formData.product_name || typeof formData.product_name !== 'string' || formData.product_name.trim() === '') {
+      toast.error('Product name is required and must be a non-empty string.');
+      return;
+    }
+    if (typeof formData.price !== 'number' || isNaN(formData.price)) {
+      toast.error('Price is required and must be a number.');
+      return;
+    }
+    if (formData.price < 0) {
+      toast.error('Price must not be less than 0.');
+      return;
+    }
+    if (!formData.category || typeof formData.category !== 'string' || formData.category.trim() === '') {
+      toast.error('Category is required and must be a non-empty string.');
+      return;
+    }
+    // Phone number validation (if phoneNumber is present)
+    if (formData.phoneNumber) {
+      const phoneRegex = /^\+2547\d{8}$/;
+      if (!phoneRegex.test(formData.phoneNumber)) {
+        toast.error('Phone number must be in the format +2547xxxxxxxx');
+        return;
+      }
+    }
+    if (!imageFile) {
+      toast.error('Please select an image.');
+      return;
+    }
+    const formPayload = new FormData();
+    formPayload.append('product_name', formData.product_name);
+    if (typeof formData.price === 'number' && !isNaN(formData.price)) {
+      formPayload.append('price', String(formData.price));
+    }
+    formPayload.append('category', formData.category);
+    formPayload.append('inStock', String(formData.inStock ?? true));
+    formPayload.append('image', imageFile);
+    if (formData.phoneNumber) {
+      formPayload.append('phoneNumber', formData.phoneNumber);
     }
 
+    console.log('formData:', formData);
+    console.log('formPayload:', [...formPayload.entries()]);
+
     try {
-      await createProductMutation.mutateAsync(formData as TProductCreate)
-      setShowCreateModal(false)
+      await createProductMutation.mutateAsync(formPayload as any);
+      setShowCreateModal(false);
       setFormData({
         product_name: '',
-        description: '',
         price: 0,
         category: '',
         image: '',
         inStock: true,
-        stock_quantity: 0,
-      })
-      toast.success('Product created successfully!')
+        phoneNumber: '',
+      });
+      setImageFile(null);
+      toast.success('Product created successfully!');
     } catch (error: any) {
-      const errorMessage = error?.message || 'Failed to create product'
-      if (
-        errorMessage.includes('Unauthorized') ||
-        errorMessage.includes('401')
-      ) {
-        toast.error('Authentication failed. Please log in again.')
-      } else {
-        toast.error(errorMessage)
-      }
-      console.error('Create error:', error)
+      toast.error(error?.message || 'Failed to create product');
     }
-  }
+  };
 
   const handleUpdate = async () => {
-    if (!selectedProduct) return
-
+    if (!selectedProduct) return;
     if (!isAuthenticated || !token) {
-      toast.error('Please log in to perform this action')
-      return
+      toast.error('Please log in to perform this action');
+      return;
     }
-
+    // Remove 'image' from the update payload, use 'imageUrl' if updating image
+    const { image, ...rest } = formData;
+    const updatePayload: any = { ...rest };
+    if (image) {
+      updatePayload.imageUrl = image;
+    }
     try {
-      // Only pick allowed fields for update
-      const allowedFields = [
-        'product_name',
-        'price',
-        'category',
-        'image',
-        'inStock',
-        'stock_quantity',
-        'description'
-      ];
-      const updatePayload = Object.fromEntries(
-        Object.entries(formData).filter(([key]) => allowedFields.includes(key))
-      );
-
       await updateProductMutation.mutateAsync({
         id: selectedProduct.id,
         product: updatePayload,
-      })
-      setShowEditModal(false)
-      setSelectedProduct(null)
-      toast.success('Product updated successfully!')
+      });
+      setShowEditModal(false);
+      setSelectedProduct(null);
+      toast.success('Product updated successfully!');
     } catch (error: any) {
-      const errorMessage = error?.message || 'Failed to update product'
+      const errorMessage = error?.message || 'Failed to update product';
       if (
         errorMessage.includes('Unauthorized') ||
         errorMessage.includes('401')
       ) {
-        toast.error('Authentication failed. Please log in again.')
+        toast.error('Authentication failed. Please log in again.');
       } else {
-        toast.error(errorMessage)
+        toast.error(errorMessage);
       }
-      console.error('Update error:', error)
+      console.error('Update error:', error);
     }
-  }
+  };
 
   const handleDelete = async () => {
     if (!selectedProduct) return
@@ -411,17 +420,15 @@ function AdminProductsComponent() {
               >
                 {/* Product Image */}
                 <div className="relative h-48 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
-                  {product.image ? (
+                  {product.imageUrl ? (
                     <img
-                      src={product.image}
+                      src={product.imageUrl}
                       alt={product.product_name}
                       className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                       onError={(e) => {
-                        e.currentTarget.style.display = 'none'
+                        e.currentTarget.style.display = 'none';
                         if (e.currentTarget.nextElementSibling) {
-                          ;(
-                            e.currentTarget.nextElementSibling as HTMLElement
-                          ).style.display = 'flex'
+                          (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex';
                         }
                       }}
                     />
@@ -601,6 +608,7 @@ function AdminProductsComponent() {
                     <input
                       type="text"
                       value={formData.product_name || ''}
+                      required
                       onChange={(e) => setFormData({ ...formData, product_name: e.target.value })}
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
                       placeholder="Enter product name"
@@ -613,8 +621,15 @@ function AdminProductsComponent() {
                     <input
                       type="number"
                       step="0.01"
-                      value={formData.price || ''}
-                      onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                      value={formData.price ?? ''}
+                      required
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setFormData({
+                          ...formData,
+                          price: value === '' ? undefined : parseFloat(value),
+                        });
+                      }}
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
                       placeholder="Enter price"
                     />
@@ -623,13 +638,16 @@ function AdminProductsComponent() {
                     <label className="block text-sm font-medium text-gray-700">
                       Category
                     </label>
-                    <input
-                      type="text"
+                    <select
                       value={formData.category || ''}
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
-                      placeholder="Enter category"
-                    />
+                    >
+                      <option value="">Select category</option>
+                      {Object.values(productCategory).map((cat) => (
+                        <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
@@ -638,16 +656,9 @@ function AdminProductsComponent() {
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={async (e) => {
+                      onChange={(e) => {
                         const file = e.target.files?.[0];
-                        if (file) {
-                          try {
-                            const imageUrl = await uploadImage(file);
-                            setFormData({ ...formData, image: imageUrl });
-                          } catch (err) {
-                            toast.error('Image upload failed');
-                          }
-                        }
+                        if (file) setImageFile(file);
                       }}
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
                     />
@@ -672,19 +683,7 @@ function AdminProductsComponent() {
                     Cancel
                   </button>
                   <button
-                    onClick={async () => {
-                      // Only send allowed fields for creation
-                      const allowedFields = [
-                        'product_name',
-                        'price',
-                        'category',
-                        'image'
-                      ];
-                      const createPayload = Object.fromEntries(
-                        Object.entries(formData).filter(([key]) => allowedFields.includes(key))
-                      );
-                      await createProductMutation.mutateAsync(createPayload as any);
-                    }}
+                    onClick={handleCreate}
                     disabled={createProductMutation.isPending}
                     className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
                   >
@@ -733,12 +732,16 @@ function AdminProductsComponent() {
                     <label className="block text-sm font-medium text-gray-700">
                       Category
                     </label>
-                    <input
-                      type="text"
+                    <select
                       value={formData.category || ''}
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
-                    />
+                    >
+                      <option value="">Select category</option>
+                      {Object.values(productCategory).map((cat) => (
+                        <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
@@ -747,15 +750,11 @@ function AdminProductsComponent() {
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={async (e) => {
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                         const file = e.target.files?.[0];
                         if (file) {
-                          try {
-                            const imageUrl = await uploadImage(file);
-                            setFormData({ ...formData, image: imageUrl });
-                          } catch (err) {
-                            toast.error('Image upload failed');
-                          }
+                          setFormData({ ...formData, image: file.name }); // Optionally update for display
+                          setImageFile(file); // Store the file for upload if needed
                         }
                       }}
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"

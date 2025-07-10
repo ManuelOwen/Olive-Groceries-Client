@@ -1,3 +1,7 @@
+
+import { authenticatedFetch } from "@/lib/utils";
+
+const url = "http://localhost:8000/api/v1";
 // Product interfaces
 export interface TProduct {
     id: number;
@@ -6,11 +10,13 @@ export interface TProduct {
     price: number;
     category: string;
     image?: string;
+    imageUrl?: string;
     rating?: number;
     inStock: boolean;
     stock_quantity?: number;
     created_at?: string;
     updated_at?: string;
+    phoneNumber?: string;
 }
 
 export interface TProductCreate {
@@ -19,13 +25,13 @@ export interface TProductCreate {
     price: number;
     category: string;
     image?: string;
+    imageUrl?: string;
     inStock: boolean;
     stock_quantity?: number;
+    phoneNumber?: string;
 }
 
-import { authenticatedFetch } from "@/lib/utils";
 
-const url = "http://localhost:8000/api/v1";
 
 // Helper functions
 const handleResponseApi = async (response: Response) => {
@@ -136,19 +142,25 @@ export const getProductById = async (id: number | string): Promise<TProduct> => 
 };
 
 // Create a new product
-export const createProduct = async (productData: TProductCreate): Promise<TProduct> => {
-    const response = await authenticatedFetch(`${url}/products`, {
-        method: 'POST',
-        body: JSON.stringify(productData),
-    });
-    await handleResponseApi(response);
-    const data = await response.json();
-    
-    // Handle wrapped response format
-    if (data && data.data) {
-        return data.data;
-    }
-    return data;
+export const createProduct = async (productData: TProductCreate | FormData): Promise<TProduct> => {
+  let options: RequestInit = { method: 'POST' };
+
+  if (productData instanceof FormData) {
+    options.body = productData;
+    // Do not set Content-Type header; browser will handle it
+  } else {
+    options.body = JSON.stringify(productData);
+    options.headers = { 'Content-Type': 'application/json' };
+  }
+
+  const response = await authenticatedFetch(`${url}/products`, options);
+  await handleResponseApi(response);
+  const data = await response.json();
+
+  if (data && data.data) {
+    return data.data;
+  }
+  return data;
 };
 
 // Update a product

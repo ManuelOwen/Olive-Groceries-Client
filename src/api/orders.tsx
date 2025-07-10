@@ -98,11 +98,47 @@ export const createOrder = async (orderData: TOrders): Promise<TOrders> => {
     return response.json();
 };
 // update an order
-export const updateOrder = async (id: number | string, orderData: Partial<TOrders
->): Promise<TOrders> => {
-    const response = await authenticatedFetch(`${url}/orders/${id}`, {
+export const updateOrder = async (id: number | string, orderData: Partial<TOrders>): Promise<TOrders> => {
+    // Remove forbidden fields
+    const {
+        id: _id,
+        created_at,
+        updated_at,
+        shipped_at,
+        delivered_at,
+        user,
+        ...orderDataClean
+    } = orderData;
+
+    // Validate status and priority
+    const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+    const validPriorities = ['low', 'normal', 'high', 'urgent'];
+
+    if (orderDataClean.status && !validStatuses.includes(orderDataClean.status)) {
+        throw new Error(`Invalid status: ${orderDataClean.status}`);
+    }
+    if (orderDataClean.priority && !validPriorities.includes(orderDataClean.priority)) {
+        throw new Error(`Invalid priority: ${orderDataClean.priority}`);
+    }
+
+    // Debug: Get token from store
+    const { getToken } = await import('@/stores/authStore');
+    const token = getToken();
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+    };
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('[UpdateOrder] Using token:', token);
+    } else {
+        console.warn('[UpdateOrder] No token found in store!');
+    }
+    console.log('[UpdateOrder] Headers:', headers);
+
+    const response = await fetch(`${url}/orders/${id}`, {
         method: 'PUT',
-        body: JSON.stringify(orderData),
+        headers,
+        body: JSON.stringify(orderDataClean),
     });
     await handleResponseApi(response);
     return response.json();

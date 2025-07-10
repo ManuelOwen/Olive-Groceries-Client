@@ -115,11 +115,23 @@ function AdminUsersComponent() {
 
   const handleUpdate = async () => {
     if (!selectedUser) return;
-    
+
+    // Only send allowed fields
+    const allowedFields = ['fullName', 'email', 'address', 'phoneNumber', 'role'];
+    const userUpdatePayload = Object.fromEntries(
+      Object.entries({ ...selectedUser, ...formData }).filter(([key]) => allowedFields.includes(key))
+    );
+
+    // Validate phone number format
+    if (userUpdatePayload.phoneNumber && !/^\+2547\d{8}$/.test(userUpdatePayload.phoneNumber)) {
+      toast.error('Phone number must be in the format +2547XXXXXXXX');
+      return;
+    }
+
     try {
       await updateUserMutation.mutateAsync({
         id: selectedUser.id.toString(),
-        user: { ...selectedUser, ...formData } as TUser
+        user: userUpdatePayload as TUser
       });
       setShowEditModal(false);
       setSelectedUser(null);
@@ -127,6 +139,7 @@ function AdminUsersComponent() {
     } catch (error) {
       toast.error('Failed to update user');
       console.error('Update error:', error);
+      console.log(error)
     }
   };
 
@@ -501,13 +514,13 @@ function AdminUsersComponent() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Role</label>
                   <select
-                    value={formData.role || userRole.User}
-                    onChange={(e) => setFormData({...formData, role: e.target.value as userRole})}
+                    value={formData.role || 'user'}
+                    onChange={(e) => setFormData({ ...formData, role: e.target.value as "admin" | "user" | "driver" })}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
                   >
-                    <option value={userRole.User}>User</option>
-                    <option value={userRole.Admin}>Admin</option>
-                    <option value={userRole.Driver}>Driver</option>
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                    <option value="driver">Driver</option>
                   </select>
                 </div>
                 <div>

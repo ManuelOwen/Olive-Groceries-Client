@@ -58,29 +58,29 @@ export const useLoginUser = (): UseMutationResult<TUser, Error, TUserLogin> => {
 };
 
 // Helper function to handle API responses
-const handleApiResponse = async (response: Response) => {
+export async function handleApiResponse(response: Response) {
   if (!response.ok) {
     let errorMessage = `Request failed with status ${response.status}: ${response.statusText}`;
-
     try {
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        const errorData = await response.json();
-        errorMessage = errorData.message || errorData.error || errorMessage;
+      const data = await response.json();
+      // Handle duplicate phone number error
+      if (data.message && typeof data.message === 'string' && data.message.includes('already exists')) {
+        errorMessage = 'Phone number is already registered. Please use a different phone number.';
+      } else if (Array.isArray(data.message)) {
+        errorMessage = data.message
+          .map((m: any) => m.constraints ? Object.values(m.constraints).join(', ') : m)
+          .join('\n');
       } else {
-        const errorText = await response.text();
-        if (errorText) {
-          errorMessage = errorText;
-        }
+        errorMessage = data.message || data.error || errorMessage;
       }
     } catch (parseError) {
+      // If parsing fails, use the default error message
       console.warn('Failed to parse error response:', parseError);
     }
-
     throw new Error(errorMessage);
   }
   return response;
-};
+}
 
 // Admin function to fetch all users (replaces useGetUsers for admin use)
 export const userService = () => {
@@ -170,22 +170,32 @@ export const useUpdateUser = (): UseMutationResult<TUser, Error, { id: string; u
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, user }: { id: string; user: TUser }) => {
+      // Remove forbidden fields
+      const { id: _id,  ...userData } = user;
+      // Debug: Get token from store
+      const { getToken } = await import('@/stores/authStore');
+      const token = getToken();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('[UpdateUser] Using token:', token);
+      } else {
+        console.warn('[UpdateUser] No token found in store!');
+      }
+      console.log('[UpdateUser] Headers:', headers);
       const response = await fetch(`${API_URL}/users/${id}`, {
+      
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(user),
+        headers,
+        body: JSON.stringify(userData),
       });
-
       await handleApiResponse(response);
       const data = await response.json();
-
-      // Handle wrapped response
       if (data.data) {
         return data.data;
       }
-
       return data;
     },
     onSuccess: () => {
@@ -199,10 +209,23 @@ export const useDeleteUser = (): UseMutationResult<void, Error, string> => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
+      // Debug: Get token from store
+      const { getToken } = await import('@/stores/authStore');
+      const token = getToken();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('[DeleteUser] Using token:', token);
+      } else {
+        console.warn('[DeleteUser] No token found in store!');
+      }
+      console.log('[DeleteUser] Headers:', headers);
       const response = await fetch(`${API_URL}/users/${id}`, {
         method: 'DELETE',
+        headers,
       });
-
       await handleApiResponse(response);
     },
     onSuccess: () => {

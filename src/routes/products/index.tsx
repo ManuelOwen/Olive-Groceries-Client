@@ -14,6 +14,7 @@ import {
   Heart,
 } from 'lucide-react'
 import { productService } from '@/hooks/useProducts';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const Route = createFileRoute('/products/')({
   component: ProductsPage,
@@ -63,51 +64,79 @@ function ProductsPage() {
       </header>
       {/* Content Area */}
       <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
-        {/* Products Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {products && products.length > 0 ? (
-            products.map((product) => (
-              <div key={product.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-                <div className="relative">
-                  <img
-                    src={product.image}
-                    alt={product.product_name}
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="absolute top-2 right-2">
-                    <button className="p-2 bg-white rounded-full shadow-md hover:bg-gray-50">
-                      <Heart size={16} className="text-gray-600" />
-                    </button>
-                  </div>
-                  {/* Remove inStock logic, always show as in stock */}
-                </div>
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-500">{product.category}</span>
-                    <div className="flex items-center">
-                      <Star size={14} className="text-yellow-400 fill-current" />
-                      <span className="text-sm text-gray-600 ml-1">{product.rating}</span>
+        {/* Products Grid with animation */}
+        <AnimatePresence>
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+            key="products-grid"
+          >
+            {products && products.length > 0 ? (
+              products.map((product, idx) => (
+                <motion.div
+                  key={product.id}
+                  className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden transition-shadow"
+                  initial={{ opacity: 0, scale: 0.95, y: 30 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 30 }}
+                  transition={{ delay: idx * 0.07, duration: 0.4, type: 'spring', stiffness: 80 }}
+                  whileHover={{
+                    scale: 1.05,
+                    y: -8,
+                    boxShadow: '0 12px 32px rgba(34,197,94,0.18)',
+                    zIndex: 2,
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                  layout
+                >
+                  <div className="relative">
+                    <motion.img
+                      src={product.imageUrl || product.image}
+                      alt={product.product_name}
+                      className="w-full h-48 object-cover"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.2, duration: 0.5 }}
+                    />
+                    <div className="absolute top-2 right-2">
+                      <button className="p-2 bg-white rounded-full shadow-md hover:bg-gray-50">
+                        <Heart size={16} className="text-gray-600" />
+                      </button>
                     </div>
                   </div>
-                  <h3 className="font-semibold text-gray-900 mb-2">{product.product_name}</h3>
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-bold text-green-600">${product.price}</span>
-                    <button 
-                      className="px-4 py-2 rounded-lg font-medium transition-colors bg-green-600 text-white hover:bg-green-700"
-                    >
+                  <div className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-gray-500">{product.category}</span>
                       <div className="flex items-center">
-                        <ShoppingCart size={16} className="mr-2" />
-                        Add to Cart
+                        <Star size={14} className="text-yellow-400 fill-current" />
+                        <span className="text-sm text-gray-600 ml-1">{product.rating}</span>
                       </div>
-                    </button>
+                    </div>
+                    <h3 className="font-semibold text-gray-900 mb-2">{product.product_name}</h3>
+                    <div className="flex items-center justify-between">
+                      <span className="text-lg font-bold text-green-600">${product.price}</span>
+                      <button 
+                        className="px-4 py-2 rounded-lg font-medium transition-colors bg-green-600 text-white hover:bg-green-700"
+                      >
+                        <div className="flex items-center">
+                          <ShoppingCart size={16} className="mr-2" />
+                          Add to Cart
+                        </div>
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div>No products found.</div>
-          )}
-        </div>
+                </motion.div>
+              ))
+            ) : (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+                No products found.
+              </motion.div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </main>
     </LayoutWithSidebar>
   );
