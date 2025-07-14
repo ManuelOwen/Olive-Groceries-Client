@@ -1,13 +1,25 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { LayoutWithSidebar } from '@/components/LayoutWithSidebar'
 import { LogoutButton } from '@/components/LogoutButton'
-import { Bell, Search, ShoppingCart, Star, Heart } from 'lucide-react'
+import { Bell, Search, ShoppingCart, Star, Heart, ChevronDown } from 'lucide-react'
 import { productService, type TProduct } from '@/hooks/useProducts'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCartStore } from '@/stores/cartStore'
 import { CartSidebar } from '@/components/sidebar'
 import { toast } from 'sonner'
 import { useState, useEffect } from 'react'
+
+// Product categories from the backend enum
+const PRODUCT_CATEGORIES = [
+  { value: 'fruit', label: 'Fruits' },
+  { value: 'vegetable', label: 'Vegetables' },
+  { value: 'dairy', label: 'Dairy' },
+  { value: 'bakery', label: 'Bakery' },
+  { value: 'meat', label: 'Meat' },
+  { value: 'seafood', label: 'Seafood' },
+  { value: 'beverage', label: 'Beverages' },
+  { value: 'snack', label: 'Snacks' },
+]
 
 export const Route = createFileRoute('/products/')({
   component: ProductsPage,
@@ -39,6 +51,8 @@ function ProductsPage() {
       return {}
     }
   })
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false)
 
   useEffect(() => {
     // Persist to localStorage
@@ -80,6 +94,12 @@ function ProductsPage() {
     console.log(`Syncing like for product ${productId}: ${isLiked}`)
   }
 
+  // Filter products by selected category
+  const filteredProducts = products?.filter((product) => {
+    if (selectedCategory === 'all') return true
+    return product.category === selectedCategory
+  }) || []
+
   if (isLoading) {
     return <div>Loading products...</div>
   }
@@ -105,6 +125,59 @@ function ProductsPage() {
               size={18}
             />
           </div>
+          
+          {/* Category Filter Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+              className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+            >
+              <span className="text-sm font-medium text-gray-700">
+                {selectedCategory === 'all' 
+                  ? 'All Categories' 
+                  : PRODUCT_CATEGORIES.find(cat => cat.value === selectedCategory)?.label || 'All Categories'
+                }
+              </span>
+              <ChevronDown 
+                className={`w-4 h-4 text-gray-500 transition-transform ${
+                  isCategoryDropdownOpen ? 'rotate-180' : ''
+                }`} 
+              />
+            </button>
+            
+            {isCategoryDropdownOpen && (
+              <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                <div className="py-1">
+                  <button
+                    onClick={() => {
+                      setSelectedCategory('all')
+                      setIsCategoryDropdownOpen(false)
+                    }}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${
+                      selectedCategory === 'all' ? 'bg-orange-50 text-orange-600' : 'text-gray-700'
+                    }`}
+                  >
+                    All Categories
+                  </button>
+                  {PRODUCT_CATEGORIES.map((category) => (
+                    <button
+                      key={category.value}
+                      onClick={() => {
+                        setSelectedCategory(category.value)
+                        setIsCategoryDropdownOpen(false)
+                      }}
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${
+                        selectedCategory === category.value ? 'bg-orange-50 text-orange-600' : 'text-gray-700'
+                      }`}
+                    >
+                      {category.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          
           <button className="p-2 hover:bg-gray-100 rounded-full relative">
             <Bell size={20} className="text-gray-600" />
             <span className="absolute top-0 right-0 bg-orange-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -134,8 +207,8 @@ function ProductsPage() {
             transition={{ duration: 0.6, ease: 'easeOut' }}
             key="products-grid"
           >
-            {products && products.length > 0 ? (
-              products.map((product, idx) => (
+            {filteredProducts && filteredProducts.length > 0 ? (
+              filteredProducts.map((product, idx) => (
                 <motion.div
                   key={product.id}
                   className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden transition-shadow"

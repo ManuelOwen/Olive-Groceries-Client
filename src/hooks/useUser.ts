@@ -155,57 +155,110 @@ export const useGetUser = (userId: string): UseQueryResult<TUser, Error> => {
   return useQuery({
     queryKey: ['user', userId],
     queryFn: async () => {
+      console.log('useGetUser - Fetching user with ID:', userId);
+
       // Add Authorization header
       const { getToken } = await import('@/stores/authStore');
       const token = getToken();
+      console.log('useGetUser - Token:', token ? 'Present' : 'Missing');
+
       const headers: Record<string, string> = {};
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
+
+      console.log('useGetUser - Making request to:', `${API_URL}/users/${userId}`);
+      console.log('useGetUser - Headers:', headers);
+
       const response = await fetch(`${API_URL}/users/${userId}`, { headers });
+      console.log('useGetUser - Response status:', response.status);
+
       if (!response.ok) {
-        throw new Error('Failed to fetch user');
+        const errorText = await response.text();
+        console.error('useGetUser - Error response:', errorText);
+        throw new Error(`Failed to fetch user: ${response.status} ${response.statusText}`);
       }
-      return response.json();
+
+      const data = await response.json();
+      console.log('useGetUser - Response data:', data);
+
+      // Handle wrapped response format
+      if (data && data.success && data.data) {
+        console.log('useGetUser - Returning wrapped data:', data.data);
+        return data.data;
+      } else if (data && data.id) {
+        // Direct user object
+        console.log('useGetUser - Returning direct data:', data);
+        return data;
+      } else {
+        console.error('useGetUser - Unexpected response format:', data);
+        throw new Error('Unexpected response format from API');
+      }
     },
     enabled: !!userId,
   });
 };
-//  hook to update user (corrected to mutation)
 export const useUpdateUser = (): UseMutationResult<TUser, Error, { id: string; user: TUser }> => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, user }: { id: string; user: TUser }) => {
+      console.log('[UpdateUser] Starting update for user ID:', id);
+      console.log('[UpdateUser] User data to update:', user);
+
       // Remove forbidden fields
-      const { id: _id,  ...userData } = user;
+      const { id: _id, ...userData } = user;
+      console.log('[UpdateUser] Cleaned user data:', userData);
+
       // Debug: Get token from store
       const { getToken } = await import('@/stores/authStore');
       const token = getToken();
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
+
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
-        console.log('[UpdateUser] Using token:', token);
+        console.log('[UpdateUser] Using token:', token ? 'TOKEN_PRESENT' : 'NO_TOKEN');
+        console.log('[UpdateUser] Token length:', token?.length);
       } else {
         console.warn('[UpdateUser] No token found in store!');
+        throw new Error('Authentication token is missing. Please log in again.');
       }
+
+      console.log('[UpdateUser] Request URL:', `${API_URL}/users/${id}`);
       console.log('[UpdateUser] Headers:', headers);
+      console.log('[UpdateUser] Body:', JSON.stringify(userData, null, 2));
+
       const response = await fetch(`${API_URL}/users/${id}`, {
-      
         method: 'PUT',
         headers,
         body: JSON.stringify(userData),
       });
-      await handleApiResponse(response);
+
+      console.log('[UpdateUser] Response status:', response.status);
+      console.log('[UpdateUser] Response headers:', Object.fromEntries(response.headers.entries()));
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[UpdateUser] Error response:', errorText);
+        throw new Error(`Update failed: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
       const data = await response.json();
+      console.log('[UpdateUser] Success response:', data);
+
       if (data.data) {
         return data.data;
       }
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('[UpdateUser] Update successful:', data);
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+    },
+    onError: (error) => {
+      console.error('[UpdateUser] Update failed:', error);
     }
   });
 };
