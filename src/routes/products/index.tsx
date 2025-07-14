@@ -1,42 +1,91 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { LayoutWithSidebar } from '@/components/LayoutWithSidebar';
-// import { SidebarDashboard } from '@/components/sidebar'
-// import { AdminSidebar } from '@/components/Admin/adminSidebar'
-// import { UserSidebar } from '@/components/user/userSidebar'
-// import { DriverSidebar } from '@/components/drivers/driverDasboard'
-// import { isAdmin, isUser, isDriver } from '@/stores/authStore'
+import { LayoutWithSidebar } from '@/components/LayoutWithSidebar'
 import { LogoutButton } from '@/components/LogoutButton'
-import {
-  Bell,
-  Search,
-  ShoppingCart,
-  Star,
-  Heart,
-} from 'lucide-react'
-import { productService } from '@/hooks/useProducts';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Bell, Search, ShoppingCart, Star, Heart } from 'lucide-react'
+import { productService, type TProduct } from '@/hooks/useProducts'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useCartStore } from '@/stores/cartStore'
+import { CartSidebar } from '@/components/sidebar'
+import { toast } from 'sonner'
+import { useState, useEffect } from 'react'
 
 export const Route = createFileRoute('/products/')({
   component: ProductsPage,
 })
 
 function ProductsPage() {
-  console.log('ProductsPage component is rendering');
-  const { data: products, isLoading, isError, error } = productService();
+  console.log('ProductsPage component is rendering')
+  const { data: products, isLoading, isError, error } = productService()
 
   // Debug: Log products data to inspect image property
-  console.log('Fetched products:', products);
+  console.log('Fetched products:', products)
 
   // Function to get page title based on user role
   // (Optional: you can keep this or hardcode 'Products')
-  const getPageTitle = () => 'Products';
+  // const getPageTitle = () => 'Products';
+
+  const [showCart, setShowCart] = useState(false)
+  // Removed unused quantities state
+  const { addToCart } = useCartStore()
+  const [cartIconClicked, setCartIconClicked] = useState<
+    Record<string | number, boolean>
+  >({})
+  const [liked, setLiked] = useState<Record<string | number, boolean>>(() => {
+    // Load from localStorage
+    try {
+      const stored = localStorage.getItem('likedProducts')
+      return stored ? JSON.parse(stored) : {}
+    } catch {
+      return {}
+    }
+  })
+
+  useEffect(() => {
+    // Persist to localStorage
+    localStorage.setItem('likedProducts', JSON.stringify(liked))
+  }, [liked])
+
+  const handleAddToCart = (product: TProduct) => {
+    setCartIconClicked((prev) => ({ ...prev, [product.id]: true }))
+    // Always add one item to cart (since quantities state is removed)
+    addToCart({
+      id: product.id,
+      product_name: product.product_name,
+      price: product.price,
+      imageUrl: product.imageUrl || product.image,
+    })
+    toast.success(`${product.product_name} added to cart!`)
+    setShowCart(true)
+    setTimeout(() => {
+      setCartIconClicked((prev) => ({ ...prev, [product.id]: false }))
+    }, 400)
+  }
+
+  const handleLike = async (id: string | number) => {
+    setLiked((prev) => {
+      const newLiked = { ...prev, [id]: !prev[id] }
+      // Placeholder for backend sync
+      syncLikeWithBackend(id, newLiked[id])
+      return newLiked
+    })
+  }
+
+  // Placeholder for backend sync
+  const syncLikeWithBackend = async (
+    productId: string | number,
+    isLiked: boolean,
+  ) => {
+    // Example: await fetch(`/api/products/${productId}/like`, { method: isLiked ? 'POST' : 'DELETE' });
+    // For now, just log
+    console.log(`Syncing like for product ${productId}: ${isLiked}`)
+  }
 
   if (isLoading) {
-    return <div>Loading products...</div>;
+    return <div>Loading products...</div>
   }
 
   if (isError) {
-    return <div>Error loading products: {error?.message}</div>;
+    return <div>Error loading products: {error?.message}</div>
   }
 
   return (
@@ -49,21 +98,32 @@ function ProductsPage() {
             <input
               type="text"
               placeholder="Search products..."
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 w-64"
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 w-64"
             />
-            <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+            <Search
+              className="absolute left-3 top-2.5 text-gray-400"
+              size={18}
+            />
           </div>
           <button className="p-2 hover:bg-gray-100 rounded-full relative">
             <Bell size={20} className="text-gray-600" />
-            <span className="absolute top-0 right-0 bg-green-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+            <span className="absolute top-0 right-0 bg-orange-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
               3
             </span>
           </button>
           <LogoutButton />
+          <button
+            className={`bg-orange-300 text-white px-6 py-2 rounded-full shadow-lg hover:bg-orange-500 transition font-semibold cursor-pointer ml-4 duration-300 ${showCart ? 'mr-0 sm:mr-96' : ''}`}
+            onClick={() => setShowCart((v) => !v)}
+          >
+            {showCart ? 'Close Cart' : 'View Cart'}
+          </button>
         </div>
       </header>
       {/* Content Area */}
-      <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
+      <main
+        className={`flex-1 overflow-y-auto p-6 bg-gray-50 transition-all duration-300 ${showCart ? 'mr-0 sm:mr-96' : ''}`}
+      >
         {/* Products Grid with animation */}
         <AnimatePresence>
           <motion.div
@@ -82,7 +142,12 @@ function ProductsPage() {
                   initial={{ opacity: 0, scale: 0.95, y: 30 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 30 }}
-                  transition={{ delay: idx * 0.07, duration: 0.4, type: 'spring', stiffness: 80 }}
+                  transition={{
+                    delay: idx * 0.07,
+                    duration: 0.4,
+                    type: 'spring',
+                    stiffness: 80,
+                  }}
                   whileHover={{
                     scale: 1.05,
                     y: -8,
@@ -102,27 +167,84 @@ function ProductsPage() {
                       transition={{ delay: 0.2, duration: 0.5 }}
                     />
                     <div className="absolute top-2 right-2">
-                      <button className="p-2 bg-white rounded-full shadow-md hover:bg-gray-50">
-                        <Heart size={16} className="text-gray-600" />
-                      </button>
+                      <motion.button
+                        className={`p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition cursor-pointer ${liked[product.id] ? 'text-red-500' : 'text-gray-600'}`}
+                        onClick={() => handleLike(product.id)}
+                        aria-label={liked[product.id] ? 'Unlike' : 'Like'}
+                        type="button"
+                        whileTap={{
+                          scale: 1.3,
+                          rotate: liked[product.id] ? 0 : 15,
+                        }}
+                        transition={{
+                          type: 'spring',
+                          stiffness: 400,
+                          damping: 10,
+                        }}
+                      >
+                        <motion.span
+                          animate={
+                            liked[product.id]
+                              ? { scale: 1.2, rotate: -10 }
+                              : { scale: 1, rotate: 0 }
+                          }
+                          transition={{
+                            type: 'spring',
+                            stiffness: 400,
+                            damping: 10,
+                          }}
+                          style={{ display: 'inline-block' }}
+                        >
+                          <Heart
+                            size={16}
+                            fill={liked[product.id] ? 'currentColor' : 'none'}
+                          />
+                        </motion.span>
+                      </motion.button>
                     </div>
                   </div>
                   <div className="p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-gray-500">{product.category}</span>
+                      <span className="text-sm text-gray-500">
+                        {product.category}
+                      </span>
                       <div className="flex items-center">
-                        <Star size={14} className="text-yellow-400 fill-current" />
-                        <span className="text-sm text-gray-600 ml-1">{product.rating}</span>
+                        <Star
+                          size={14}
+                          className="text-yellow-400 fill-current"
+                        />
+                        <span className="text-sm text-gray-600 ml-1">
+                          {product.rating}
+                        </span>
                       </div>
                     </div>
-                    <h3 className="font-semibold text-gray-900 mb-2">{product.product_name}</h3>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      {product.product_name}
+                    </h3>
                     <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-green-600">${product.price}</span>
-                      <button 
-                        className="px-4 py-2 rounded-lg font-medium transition-colors bg-green-600 text-white hover:bg-green-700"
+                      <span className="text-lg font-bold text-green-600">
+                        KSH {product.price}
+                      </span>
+                      <button
+                        className="px-4 py-2 rounded-lg font-medium transition-colors bg-orange-300 text-white hover:bg-orange-500 focus:ring-2 focus:ring-orange-400 focus:outline-none cursor-pointer shadow-md hover:shadow-lg"
+                        onClick={() => handleAddToCart(product)}
                       >
                         <div className="flex items-center">
-                          <ShoppingCart size={16} className="mr-2" />
+                          <motion.span
+                            animate={
+                              cartIconClicked[product.id]
+                                ? { y: -10 }
+                                : { y: 0 }
+                            }
+                            transition={{
+                              type: 'spring',
+                              stiffness: 400,
+                              damping: 10,
+                            }}
+                            style={{ display: 'inline-block' }}
+                          >
+                            <ShoppingCart size={16} className="mr-2" />
+                          </motion.span>
                           Add to Cart
                         </div>
                       </button>
@@ -131,13 +253,18 @@ function ProductsPage() {
                 </motion.div>
               ))
             ) : (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              >
                 No products found.
               </motion.div>
             )}
           </motion.div>
         </AnimatePresence>
       </main>
+      {showCart && <CartSidebar onClose={() => setShowCart(false)} />}
     </LayoutWithSidebar>
-  );
+  )
 }

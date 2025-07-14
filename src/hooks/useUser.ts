@@ -155,8 +155,14 @@ export const useGetUser = (userId: string): UseQueryResult<TUser, Error> => {
   return useQuery({
     queryKey: ['user', userId],
     queryFn: async () => {
-      // Replace with your actual API call to fetch a single user
-      const response = await fetch(`${API_URL}/users/${userId}`);
+      // Add Authorization header
+      const { getToken } = await import('@/stores/authStore');
+      const token = getToken();
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const response = await fetch(`${API_URL}/users/${userId}`, { headers });
       if (!response.ok) {
         throw new Error('Failed to fetch user');
       }

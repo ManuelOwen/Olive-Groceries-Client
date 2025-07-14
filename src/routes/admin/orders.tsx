@@ -1,206 +1,282 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { useState } from 'react';
-import { 
-  orderService, 
-  useCreateOrder, 
-  useUpdateOrder, 
-  useDeleteOrder 
-} from '@/hooks/useOrders';
-import { type TOrders, OrderPriority, OrderStatus } from '@/interfaces/orderInterface';
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  ChevronLeft, 
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { useState } from 'react'
+import {
+  orderService,
+  useCreateOrder,
+  useUpdateOrder,
+  useDeleteOrder,
+} from '@/hooks/useOrders'
+import {
+  type TOrders,
+  OrderPriority,
+  OrderStatus,
+} from '@/interfaces/orderInterface'
+import {
+  Plus,
+  Edit,
+  Trash2,
+  ChevronLeft,
   ChevronRight,
   Search,
   Filter,
-  
-} from 'lucide-react';
-import { Toaster, toast } from 'sonner';
-import { LayoutWithSidebar } from '@/components/LayoutWithSidebar';
+} from 'lucide-react'
+import { Toaster, toast } from 'sonner'
+import { LayoutWithSidebar } from '@/components/LayoutWithSidebar'
+import { useAuthStore } from '@/stores/authStore';
 
 export const Route = createFileRoute('/admin/orders')({
+  beforeLoad: () => {
+    // Use direct import and getState for auth store
+    const { user, isAuthenticated, token } = useAuthStore.getState();
+    console.log('Admin orders beforeLoad - auth check:', {
+      isAuthenticated,
+      hasUser: !!user,
+      hasToken: !!token,
+      userRole: user?.role,
+    });
+
+    if (!isAuthenticated || !user || !token) {
+      console.log('Admin orders - User not authenticated, redirecting to login');
+      throw redirect({ to: '/login' });
+    }
+
+    if (user.role !== 'admin') {
+      console.log('Admin orders - User not admin, redirecting to dashboard');
+      throw redirect({ to: '/dashboard' });
+    }
+  },
   component: AdminOrdersComponent,
-});
-
+})
 function AdminOrdersComponent() {
-  const { data: orders = [], isLoading, isError, error } = orderService();
-  const createOrderMutation = useCreateOrder();
-  const updateOrderMutation = useUpdateOrder();
-  const deleteOrderMutation = useDeleteOrder();
-
-
+  const { data: orders = [], isLoading, isError, error } = orderService()
+  const createOrderMutation = useCreateOrder()
+  const updateOrderMutation = useUpdateOrder()
+  const deleteOrderMutation = useDeleteOrder()
 
   // State for pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(10)
 
   // State for search and filter
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [priorityFilter, setPriorityFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [priorityFilter, setPriorityFilter] = useState<string>('all')
 
   // State for modals
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<TOrders | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [selectedOrder, setSelectedOrder] = useState<TOrders | null>(null)
 
   // State for form data
   const [formData, setFormData] = useState<Partial<TOrders>>({
     order_number: '',
     total_amount: 0,
-    status: OrderStatus.Pending,
+    status: OrderStatus.PENDING,
     priority: OrderPriority.Low,
     shipping_address: '',
     billing_address: '',
     user_id: 0,
-  });
+  })
 
   // Filter and search orders
-  const filteredOrders = Array.isArray(orders) ? orders.filter(order => {
-    const matchesSearch = order.order_number?.toString().includes(searchTerm) ||
-                         order.shipping_address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.user_id?.toString().includes(searchTerm) ||
-                         order.user?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.user?.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || String(order.status) === String(statusFilter);
-    const matchesPriority = priorityFilter === 'all' || order.priority === priorityFilter;
-    
-    return matchesSearch && matchesStatus && matchesPriority;
-  }) : [];
+  const filteredOrders = Array.isArray(orders)
+    ? orders.filter((order) => {
+        const matchesSearch =
+          order.order_number?.toString().includes(searchTerm) ||
+          order.shipping_address
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          order.user_id?.toString().includes(searchTerm) ||
+          order.user?.fullName
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          order.user?.email?.toLowerCase().includes(searchTerm.toLowerCase())
+
+        const matchesStatus =
+          statusFilter === 'all' ||
+          String(order.status) === String(statusFilter)
+        const matchesPriority =
+          priorityFilter === 'all' || order.priority === priorityFilter
+
+        return matchesSearch && matchesStatus && matchesPriority
+      })
+    : []
 
   // Pagination
-  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentOrders = filteredOrders.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentOrders = filteredOrders.slice(startIndex, endIndex)
 
   // Helper functions
   const getStatusBadge = (status: string) => {
-    const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
-      'pending': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pending' },
-      'processing': { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Processing' },
-      'shipped': { bg: 'bg-purple-100', text: 'text-purple-800', label: 'Shipped' },
-      'delivered': { bg: 'bg-green-100', text: 'text-green-800', label: 'Delivered' },
-      'cancelled': { bg: 'bg-red-100', text: 'text-red-800', label: 'Cancelled' },
-      'confirmed': { bg: 'bg-green-100', text: 'text-green-800', label: 'Confirmed' },
-    };
-    
-    const config = statusConfig[status?.toLowerCase()] || { bg: 'bg-gray-100', text: 'text-gray-800', label: status || 'Unknown' };
+    const statusConfig: Record<
+      string,
+      { bg: string; text: string; label: string }
+    > = {
+      pending: {
+        bg: 'bg-yellow-100',
+        text: 'text-yellow-800',
+        label: 'Pending',
+      },
+      processing: {
+        bg: 'bg-blue-100',
+        text: 'text-blue-800',
+        label: 'Processing',
+      },
+      shipped: {
+        bg: 'bg-purple-100',
+        text: 'text-purple-800',
+        label: 'Shipped',
+      },
+      delivered: {
+        bg: 'bg-green-100',
+        text: 'text-green-800',
+        label: 'Delivered',
+      },
+      cancelled: { bg: 'bg-red-100', text: 'text-red-800', label: 'Cancelled' },
+      confirmed: {
+        bg: 'bg-green-100',
+        text: 'text-green-800',
+        label: 'Confirmed',
+      },
+    }
+
+    const config = statusConfig[status?.toLowerCase()] || {
+      bg: 'bg-gray-100',
+      text: 'text-gray-800',
+      label: status || 'Unknown',
+    }
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}
+      >
         {config.label}
       </span>
-    );
-  };
+    )
+  }
 
   const getPriorityBadge = (priority: string) => {
-    const priorityConfig: Record<string, { bg: string; text: string; label: string }> = {
-      'low': { bg: 'bg-green-100', text: 'text-green-800', label: 'Low' },
-      'medium': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Medium' },
-      'high': { bg: 'bg-red-100', text: 'text-red-800', label: 'High' },
-      'urgent': { bg: 'bg-red-200', text: 'text-red-900', label: 'Urgent' },
-    };
-    
-    const config = priorityConfig[priority?.toLowerCase()] || { bg: 'bg-gray-100', text: 'text-gray-800', label: priority || 'Normal' };
+    const priorityConfig: Record<
+      string,
+      { bg: string; text: string; label: string }
+    > = {
+      low: { bg: 'bg-green-100', text: 'text-green-800', label: 'Low' },
+      medium: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Medium' },
+      high: { bg: 'bg-red-100', text: 'text-red-800', label: 'High' },
+      urgent: { bg: 'bg-red-200', text: 'text-red-900', label: 'Urgent' },
+    }
+
+    const config = priorityConfig[priority?.toLowerCase()] || {
+      bg: 'bg-gray-100',
+      text: 'text-gray-800',
+      label: priority || 'Normal',
+    }
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}
+      >
         {config.label}
       </span>
-    );
-  };
+    )
+  }
 
   const formatDate = (date: Date | string) => {
-    if (!date) return 'N/A';
-    return new Date(date).toLocaleDateString();
-  };
+    if (!date) return 'N/A'
+    return new Date(date).toLocaleDateString()
+  }
 
   const formatCurrency = (amount: string | number) => {
-    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD'
-    }).format(numAmount);
-  };
+      currency: 'USD',
+    }).format(numAmount)
+  }
 
   // CRUD Operations
   const handleCreate = async () => {
     try {
-      await createOrderMutation.mutateAsync(formData as TOrders);
-      setShowCreateModal(false);
+      await createOrderMutation.mutateAsync(formData as TOrders)
+      setShowCreateModal(false)
       setFormData({
         order_number: '',
         total_amount: 0,
-        status: OrderStatus.Pending,
+        status: OrderStatus.PENDING,
         priority: OrderPriority.Low,
         shipping_address: '',
         billing_address: '',
         user_id: 0,
-      });
-      toast.success('Order created successfully!');
+      })
+      toast.success('Order created successfully!')
     } catch (error) {
-      toast.error('Failed to create order');
-      console.error('Create error:', error);
+      toast.error('Failed to create order')
+      console.error('Create error:', error)
     }
-  };
+  }
 
   const handleUpdate = async () => {
-    if (!selectedOrder) return;
+    if (!selectedOrder) return
     try {
       // Only send allowed fields for update
       const allowedFields = [
-        'order_number',
+        // 'order_number', // Removed to prevent sending in update payload
         'total_amount',
         'status',
         'priority',
         'shipping_address',
         'billing_address',
         'user_id',
-      ];
-      const updatePayload = Object.fromEntries(
-        Object.entries(formData).filter(([key]) => allowedFields.includes(key))
-      );
-      console.log('Updating order with priority:', formData.priority);
+      ]
+      // Remove forbidden fields from formData before filtering
+      const { shipped_at, delivered_at, ...formDataClean } = formData
+      let updatePayload = Object.fromEntries(
+        Object.entries(formDataClean).filter(([key]) =>
+          allowedFields.includes(key),
+        ),
+      )
+      // Extra safety: Remove forbidden fields again
+      delete updatePayload.shipped_at
+      delete updatePayload.delivered_at
+      console.log('Update payload being sent:', updatePayload) // Debug log
       await updateOrderMutation.mutateAsync({
         id: selectedOrder.id.toString(),
         order: updatePayload as any,
-      });
-      setShowEditModal(false);
-      setSelectedOrder(null);
-      toast.success('Order updated successfully!');
+      })
+      setShowEditModal(false)
+      setSelectedOrder(null)
+      toast.success('Order updated successfully!')
     } catch (error) {
-      toast.error('Failed to update order');
-      console.error('Update error:', error);
+      toast.error('Failed to update order')
+      console.error('Update error:', error)
     }
-  };
+  }
 
   const handleDelete = async () => {
-    if (!selectedOrder) return;
-    
+    if (!selectedOrder) return
+
     try {
-      await deleteOrderMutation.mutateAsync(selectedOrder.id.toString());
-      setShowDeleteModal(false);
-      setSelectedOrder(null);
-      toast.success('Order deleted successfully!');
+      await deleteOrderMutation.mutateAsync(selectedOrder.id.toString())
+      setShowDeleteModal(false)
+      setSelectedOrder(null)
+      toast.success('Order deleted successfully!')
     } catch (error) {
-      toast.error('Failed to delete order');
-      console.error('Delete error:', error);
+      toast.error('Failed to delete order')
+      console.error('Delete error:', error)
     }
-  };
+  }
 
   const openEditModal = (order: TOrders) => {
-    setSelectedOrder(order);
-    setFormData(order);
-    setShowEditModal(true);
-  };
+    setSelectedOrder(order)
+    setFormData(order)
+    setShowEditModal(true)
+  }
 
   const openDeleteModal = (order: TOrders) => {
-    setSelectedOrder(order);
-    setShowDeleteModal(true);
-  };
+    setSelectedOrder(order)
+    setShowDeleteModal(true)
+  }
 
   if (isLoading) {
     return (
@@ -209,18 +285,22 @@ function AdminOrdersComponent() {
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500"></div>
         </div>
       </LayoutWithSidebar>
-    );
+    )
   }
 
   if (isError) {
     return (
       <LayoutWithSidebar>
         <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-red-800 mb-2">Error Loading Orders</h3>
-          <p className="text-red-600">{error?.message || 'An unexpected error occurred'}</p>
+          <h3 className="text-lg font-medium text-red-800 mb-2">
+            Error Loading Orders
+          </h3>
+          <p className="text-red-600">
+            {error?.message || 'An unexpected error occurred'}
+          </p>
         </div>
       </LayoutWithSidebar>
-    );
+    )
   }
 
   // Check if orders is not an array (API returned unexpected data)
@@ -228,29 +308,34 @@ function AdminOrdersComponent() {
     return (
       <LayoutWithSidebar>
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-yellow-800 mb-2">Unexpected Data Format</h3>
+          <h3 className="text-lg font-medium text-yellow-800 mb-2">
+            Unexpected Data Format
+          </h3>
           <p className="text-yellow-600">
-            The API returned unexpected data. Expected an array of orders, but got: {typeof orders}
+            The API returned unexpected data. Expected an array of orders, but
+            got: {typeof orders}
           </p>
           <pre className="mt-2 p-2 bg-gray-100 rounded text-xs overflow-auto">
             {JSON.stringify(orders, null, 2)}
           </pre>
         </div>
       </LayoutWithSidebar>
-    );
+    )
   }
 
   return (
     <LayoutWithSidebar>
       <>
         <Toaster position="top-right" richColors closeButton />
-        
+
         <div className="p-6">
           <h1 className="text-2xl font-bold mb-4">Orders</h1>
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Orders Management</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Orders Management
+              </h1>
               <p className="text-gray-600">Manage all customer orders</p>
             </div>
             <button
@@ -349,8 +434,12 @@ function AdminOrdersComponent() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {order.user ? (
                           <div>
-                            <div className="font-medium text-gray-900">{order.user.fullName}</div>
-                            <div className="text-gray-500">{order.user.email}</div>
+                            <div className="font-medium text-gray-900">
+                              {order.user.fullName}
+                            </div>
+                            <div className="text-gray-500">
+                              {order.user.email}
+                            </div>
                           </div>
                         ) : (
                           `User ${order.user_id}`
@@ -397,14 +486,18 @@ function AdminOrdersComponent() {
               <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
                 <div className="flex-1 flex justify-between sm:hidden">
                   <button
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
                     disabled={currentPage === 1}
                     className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Previous
                   </button>
                   <button
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
                     disabled={currentPage === totalPages}
                     className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -414,37 +507,52 @@ function AdminOrdersComponent() {
                 <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                   <div>
                     <p className="text-sm text-gray-700">
-                      Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
-                      <span className="font-medium">{Math.min(endIndex, filteredOrders.length)}</span> of{' '}
-                      <span className="font-medium">{filteredOrders.length}</span> results
+                      Showing{' '}
+                      <span className="font-medium">{startIndex + 1}</span> to{' '}
+                      <span className="font-medium">
+                        {Math.min(endIndex, filteredOrders.length)}
+                      </span>{' '}
+                      of{' '}
+                      <span className="font-medium">
+                        {filteredOrders.length}
+                      </span>{' '}
+                      results
                     </p>
                   </div>
                   <div>
                     <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
                       <button
-                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        onClick={() =>
+                          setCurrentPage((prev) => Math.max(prev - 1, 1))
+                        }
                         disabled={currentPage === 1}
                         className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <ChevronLeft className="h-5 w-5" />
                       </button>
-                      
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                        <button
-                          key={page}
-                          onClick={() => setCurrentPage(page)}
-                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                            currentPage === page
-                              ? 'z-10 bg-orange-50 border-orange-500 text-orange-600'
-                              : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      ))}
-                      
+
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                        (page) => (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                              currentPage === page
+                                ? 'z-10 bg-orange-50 border-orange-500 text-orange-600'
+                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        ),
+                      )}
+
                       <button
-                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        onClick={() =>
+                          setCurrentPage((prev) =>
+                            Math.min(prev + 1, totalPages),
+                          )
+                        }
                         disabled={currentPage === totalPages}
                         className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -462,12 +570,23 @@ function AdminOrdersComponent() {
             <div className="text-center py-12">
               <div className="mx-auto h-24 w-24 text-gray-400">
                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1}
+                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                  />
                 </svg>
               </div>
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No orders found</h3>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">
+                No orders found
+              </h3>
               <p className="mt-1 text-sm text-gray-500">
-                {searchTerm || statusFilter !== 'all' || priorityFilter !== 'all' ? 'Try adjusting your search or filters.' : 'Get started by creating a new order.'}
+                {searchTerm ||
+                statusFilter !== 'all' ||
+                priorityFilter !== 'all'
+                  ? 'Try adjusting your search or filters.'
+                  : 'Get started by creating a new order.'}
               </p>
             </div>
           )}
@@ -480,79 +599,115 @@ function AdminOrdersComponent() {
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
             <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
               <div className="mt-3">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Create New Order</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  Create New Order
+                </h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Order Number</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Order Number
+                    </label>
                     <input
                       type="text"
                       value={formData.order_number || ''}
-                      onChange={(e) => setFormData({...formData, order_number: e.target.value})}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          order_number: e.target.value,
+                        })
+                      }
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
                       placeholder="Enter order number"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Total Amount</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Total Amount
+                    </label>
                     <input
                       type="text"
                       value={formData.total_amount || ''}
-                      onChange={(e) => setFormData({...formData, total_amount: parseFloat(e.target.value) || 0})}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          total_amount: parseFloat(e.target.value) || 0,
+                        })
+                      }
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
                       placeholder="Enter amount (e.g., 99.99)"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Status</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Status
+                    </label>
                     <select
-                      value={formData.status || OrderStatus.Pending}
-                      onChange={(e) => setFormData({...formData, status: e.target.value as OrderStatus})}
+                      value={formData.status || OrderStatus.PENDING}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          status: e.target.value as OrderStatus,
+                        })
+                      }
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
                     >
-                      <option value={OrderStatus.Pending}>Pending</option>
-                      <option value={OrderStatus.Processing}>Processing</option>
-                      <option value={OrderStatus.Shipped}>Shipped</option>
-                      <option value={OrderStatus.Delivered}>Delivered</option>
-                      <option value={OrderStatus.Cancelled}>Cancelled</option>
+                      <option value={OrderStatus.PENDING}>Pending</option>
+                      <option value={OrderStatus.CONFIRMED}>Confirmed</option>
+                      <option value={OrderStatus.PROCESSING}>Processing</option>
+                      <option value={OrderStatus.SHIPPED}>Shipped</option>
+                      <option value={OrderStatus.DELIVERED}>Delivered</option>
+                      <option value={OrderStatus.CANCELLED}>Cancelled</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Priority</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Priority
+                    </label>
                     <select
                       value={formData.priority || OrderPriority.Low}
-                      onChange={(e) => setFormData({...formData, priority: e.target.value as OrderPriority})}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          priority: e.target.value as OrderPriority,
+                        })
+                      }
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
                     >
                       <option value={OrderPriority.Low}>Low</option>
                       <option value={OrderPriority.Medium}>Medium</option>
                       <option value={OrderPriority.High}>High</option>
-                      <option value={OrderPriority.Urgent}>Urgent</option>  
+                      <option value={OrderPriority.Urgent}>Urgent</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">User ID</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      User ID
+                    </label>
                     <input
                       type="number"
                       value={formData.user_id || ''}
-                      onChange={(e) => setFormData({...formData, user_id: parseInt(e.target.value) || 0})}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          user_id: parseInt(e.target.value) || 0,
+                        })
+                      }
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
                       placeholder="Enter user ID"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Shipping Address</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Shipping Address
+                    </label>
                     <textarea
                       value={formData.shipping_address || ''}
-                      onChange={(e) => setFormData({...formData, shipping_address: e.target.value})}
-                      rows={3}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Billing Address</label>
-                    <textarea
-                      value={formData.billing_address || ''}
-                      onChange={(e) => setFormData({...formData, billing_address: e.target.value})}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          shipping_address: e.target.value,
+                        })
+                      }
                       rows={3}
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
                     />
@@ -570,7 +725,9 @@ function AdminOrdersComponent() {
                     disabled={createOrderMutation.isPending}
                     className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
                   >
-                    {createOrderMutation.isPending ? 'Creating...' : 'Create Order'}
+                    {createOrderMutation.isPending
+                      ? 'Creating...'
+                      : 'Create Order'}
                   </button>
                 </div>
               </div>
@@ -583,37 +740,61 @@ function AdminOrdersComponent() {
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
             <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
               <div className="mt-3">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Edit Order #{selectedOrder.order_number}</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  Edit Order #{selectedOrder.order_number}
+                </h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Total Amount</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Total Amount
+                    </label>
                     <input
                       type="number"
                       step="0.01"
                       value={formData.total_amount || ''}
-                      onChange={(e) => setFormData({...formData, total_amount: parseFloat(e.target.value)})}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          total_amount: parseFloat(e.target.value),
+                        })
+                      }
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Status</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Status
+                    </label>
                     <select
-                      value={formData.status || OrderStatus.Pending}
-                      onChange={(e) => setFormData({...formData, status: e.target.value as OrderStatus})}
+                      value={formData.status || OrderStatus.PENDING}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          status: e.target.value as OrderStatus,
+                        })
+                      }
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
                     >
-                      <option value={OrderStatus.Pending}>Pending</option>
-                      <option value={OrderStatus.Processing}>Processing</option>
-                      <option value={OrderStatus.Shipped}>Shipped</option>
-                      <option value={OrderStatus.Delivered}>Delivered</option>
-                      <option value={OrderStatus.Cancelled}>Cancelled</option>
+                      <option value={OrderStatus.PENDING}>Pending</option>
+                      <option value={OrderStatus.CONFIRMED}>Confirmed</option>
+                      <option value={OrderStatus.PROCESSING}>Processing</option>
+                      <option value={OrderStatus.SHIPPED}>Shipped</option>
+                      <option value={OrderStatus.DELIVERED}>Delivered</option>
+                      <option value={OrderStatus.CANCELLED}>Cancelled</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Priority</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Priority
+                    </label>
                     <select
                       value={formData.priority || OrderPriority.Low}
-                      onChange={(e) => setFormData({...formData, priority: e.target.value as OrderPriority})}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          priority: e.target.value as OrderPriority,
+                        })
+                      }
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
                     >
                       <option value={OrderPriority.Low}>Low</option>
@@ -622,19 +803,17 @@ function AdminOrdersComponent() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Shipping Address</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Shipping Address
+                    </label>
                     <textarea
                       value={formData.shipping_address || ''}
-                      onChange={(e) => setFormData({...formData, shipping_address: e.target.value})}
-                      rows={3}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Billing Address</label>
-                    <textarea
-                      value={formData.billing_address || ''}
-                      onChange={(e) => setFormData({...formData, billing_address: e.target.value})}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          shipping_address: e.target.value,
+                        })
+                      }
                       rows={3}
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
                     />
@@ -652,7 +831,9 @@ function AdminOrdersComponent() {
                     disabled={updateOrderMutation.isPending}
                     className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
                   >
-                    {updateOrderMutation.isPending ? 'Updating...' : 'Update Order'}
+                    {updateOrderMutation.isPending
+                      ? 'Updating...'
+                      : 'Update Order'}
                   </button>
                 </div>
               </div>
@@ -668,10 +849,13 @@ function AdminOrdersComponent() {
                 <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
                   <Trash2 className="h-6 w-6 text-red-600" />
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mt-2">Delete Order</h3>
+                <h3 className="text-lg font-medium text-gray-900 mt-2">
+                  Delete Order
+                </h3>
                 <div className="mt-2 px-7 py-3">
                   <p className="text-sm text-gray-500">
-                    Are you sure you want to delete order #{selectedOrder.order_number}? This action cannot be undone.
+                    Are you sure you want to delete order #
+                    {selectedOrder.order_number}? This action cannot be undone.
                   </p>
                 </div>
                 <div className="flex justify-center space-x-3 mt-4">
@@ -695,7 +879,7 @@ function AdminOrdersComponent() {
         )}
       </>
     </LayoutWithSidebar>
-  );
+  )
 }
 
-export default AdminOrdersComponent;
+export default AdminOrdersComponent

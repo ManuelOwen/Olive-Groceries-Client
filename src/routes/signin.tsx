@@ -274,19 +274,19 @@ return (
           selector={(state) => [state.canSubmit, state.isSubmitting]}
         >
           {([canSubmit, isSubmitting]) => (
-            <button
-            
-              type="submit"
-              disabled={!canSubmit || createUserMutation.isPending}
-              className={`w-2/4 py-2 px-4 text-white font-semibold rounded-lg transition cursor-pointer ${
-                canSubmit && !createUserMutation.isPending
-                  ? 'bg-orange-400 hover:bg-orange-500'
-                  : 'bg-orange-200 cursor-not-allowed'
-              }`}
-            >
-              {isSubmitting || createUserMutation.isPending ? 'Registering...' : 'Sign Up'}
-            </button>
-            
+            <div className="flex justify-center">
+              <button
+                type="submit"
+                disabled={!canSubmit || createUserMutation.isPending}
+                className={`w-2/4 py-2 px-4 text-white font-semibold rounded-lg transition cursor-pointer ${
+                  canSubmit && !createUserMutation.isPending
+                    ? 'bg-orange-400 hover:bg-orange-500'
+                    : 'bg-orange-200 cursor-not-allowed'
+                }`}
+              >
+                {isSubmitting || createUserMutation.isPending ? 'Registering...' : 'Sign Up'}
+              </button>
+            </div>
           )}
         </form.Subscribe>
         <h3>Already Have an Account?   <Link className="text-orange-400 hover:underline" to="/login">Login</Link></h3>

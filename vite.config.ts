@@ -12,6 +12,15 @@ export default defineConfig({
     viteReact(),
     tailwindcss(),
   ],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
   // test configuration removed; move to vitest.config.ts if using Vitest
   resolve: {
     alias: {

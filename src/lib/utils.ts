@@ -12,11 +12,11 @@ export function getAuthHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   }
-  
+
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
   }
-  
+
   return headers
 }
 
@@ -51,23 +51,9 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
 }
 
 // Utility function to check if user is authenticated and verified
-export function isUserVerified(): boolean {
-  try {
-    const { user, isAuthenticated, token } = useAuthStore.getState();
-    console.log('dashboard', user)
-    // Check if user object has required properties and is verified
-    return Boolean(
-      isAuthenticated &&
-      user &&
-      user.id !== undefined && user.id !== null &&
-      user.email !== undefined && user.email !== null &&
-      user.role !== undefined && user.role !== null &&
-      token
-    );
-  } catch (error) {
-    console.error('Error checking user verification:', error);
-    return false;
-  }
+export function isUserVerified(user: any): boolean {
+  // TODO: Implement actual verification logic
+  return !!user && user.verified === true;
 }
 
 // Utility function to get user data from auth store
@@ -89,10 +75,7 @@ export function clearUserData(): void {
 // Utility function to handle user logout
 export function logoutUser(): void {
   useAuthStore.getState().logout();
-  // Note: In a real application, you might want to also:
-  // 1. Call an API endpoint to invalidate the session server-side
-  // 2. Clear any other authentication tokens
-  // 3. Redirect to login page (this should be handled by the calling component)
+
 }
 
 // Utility function to get user role
@@ -104,17 +87,4 @@ export function getUserRole(): string | null {
     console.error('Error getting user role:', error);
     return null;
   }
-}
-
-// Role-based check functions
-export function isAdmin(): boolean {
-  return getUserRole() === 'admin';
-}
-
-export function isUser(): boolean {
-  return getUserRole() === 'user';
-}
-
-export function isDriver(): boolean {
-  return getUserRole() === 'driver';
 }

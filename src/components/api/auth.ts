@@ -71,11 +71,14 @@ export const loginUser = async (userData: {
   console.log('Raw login API response:', data);
   console.log('Response keys:', Object.keys(data));
 
-  // Handle different response formats from the API
   let user: TUser;
   let token: string;
 
-  if (data.data && data.token) {
+  if (data.user && data.accessToken) {
+    // Our backend format: { accessToken, refreshToken, user: { ... } }
+    user = data.user;
+    token = data.accessToken;
+  } else if (data.data && data.token) {
     // Format: { success: true, data: user, token: "..." }
     user = data.data;
     token = data.token;
@@ -95,15 +98,17 @@ export const loginUser = async (userData: {
   } else if (data.accessToken) {
     // Format: { accessToken: "...", refreshToken: "...", role: "...", id: ... }
     token = data.accessToken;
-    // Build user object from the response data
     user = {
       id: data.id?.toString() || '',
-      email: data.email || userData.email || '', // Use login email as fallback
+      email: data.email || userData.email || '',
       fullName: data.fullName || data.name || data.username || 'User',
       address: data.address || '',
       phoneNumber: data.phoneNumber || data.phone || '',
-      role: data.role || 'user'
+      role: data.role // Do not fallback to 'user' if missing
     };
+    if (!user.role) {
+      console.error('Role missing in login response:', data);
+    }
     console.log('AccessToken format detected. Built user object:', user);
   } else {
     // Fallback - assume data is the user and look for token in various possible field names
@@ -118,6 +123,9 @@ export const loginUser = async (userData: {
       data.bearer_token ||
       data.bearerToken ||
       '';
+    if (!user.role) {
+      console.error('Role missing in fallback login response:', data);
+    }
   }
 
   console.log('Extracted login data:', {

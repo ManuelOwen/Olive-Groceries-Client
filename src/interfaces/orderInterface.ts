@@ -1,10 +1,10 @@
 export enum OrderStatus {
-    Pending = "pending",
-    Confirmed = "confirmed",
-    Processing = "processing",
-    Shipped = "shipped",
-    Delivered = "delivered",
-    Cancelled = "cancelled"
+  PENDING = 'pending',
+  CONFIRMED = 'confirmed',
+  PROCESSING = 'processing',
+  SHIPPED = 'shipped',
+  DELIVERED = 'delivered',
+  CANCELLED = 'cancelled',
 }
 export enum OrderPriority {
     Low = "low",

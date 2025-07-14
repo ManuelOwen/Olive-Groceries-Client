@@ -7,13 +7,14 @@ import {
   Bell,
   Search,
 } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
 
 export const Route = createFileRoute('/dashboard/admin')({
-  // Check if the user is verified by checking localStorage
   beforeLoad: () => {
-    const isVerified = isUserVerified();
-    console.log('User verification status:', isVerified);
-    if (!isVerified) {
+    // Use direct import and getState for auth store
+    const { user, isAuthenticated, token } = useAuthStore.getState();
+    console.log('Admin dashboard beforeLoad - user:', user, 'isAuthenticated:', isAuthenticated, 'token:', token);
+    if (!isAuthenticated || !user || !user.id || !token || user.role !== 'admin') {
       throw redirect({ to: '/login' });
     }
   },

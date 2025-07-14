@@ -1,171 +1,190 @@
-import type { TOrders } from "@/interfaces/orderInterface";
-import { getAuthHeaders, authenticatedFetch } from "@/lib/utils";
+import type { TOrders } from '@/interfaces/orderInterface'
+import {  authenticatedFetch } from '@/lib/utils'
 
-const url ="http://localhost:8000/api/v1"
+const url = '/api/v1'
 // helper functions
 const handleResponseApi = async (response: Response) => {
-    if (!response.ok) {
-        let errorMessage = `Request failed with status ${response.status}: ${response.statusText}`;
-        try {
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                const errorData = await response.json();
-                errorMessage = errorData.message || errorData.error || errorMessage;
-            } else {
-                // If not JSON, try to read as text
-                const errorText = await response.text();
-                if (errorText) {
-                    errorMessage = errorText;
-                }
-            }
-        } catch (parseError) {
-            // If parsing fails, use the default error message
-            console.warn('Failed to parse error response:', parseError);
+  if (!response.ok) {
+    let errorMessage = `Request failed with status ${response.status}: ${response.statusText}`
+    try {
+      const contentType = response.headers.get('content-type')
+      if (contentType && contentType.includes('application/json')) {
+        const errorData = await response.json()
+        errorMessage = errorData.message || errorData.error || errorMessage
+      } else {
+        // If not JSON, try to read as text
+        const errorText = await response.text()
+        if (errorText) {
+          errorMessage = errorText
         }
-
-        throw new Error(errorMessage);
+      }
+    } catch (parseError) {
+      // If parsing fails, use the default error message
+      console.warn('Failed to parse error response:', parseError)
     }
-    return response;
-} 
+
+    throw new Error(errorMessage)
+  }
+  return response
+}
 
 // Temporary function to test API without authentication
 export const getAllOrdersWithoutAuth = async (): Promise<TOrders[]> => {
-    console.log('Making unauthenticated request to orders API...');
-    console.log('URL:', `${url}/orders`);
-    
-    try {
-        const response = await fetch(`${url}/orders`);
-        console.log('Response status:', response.status);
-        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-        
-        const responseText = await response.text();
-        console.log('Response text:', responseText);
-        
-        if (!response.ok) {
-            console.error('API request failed:', response.status, response.statusText);
-            console.error('Response body:', responseText);
-            throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-        }
-        
-        // Try to parse as JSON
-        try {
-            const data = JSON.parse(responseText);
-            console.log('Parsed response data:', data);
-            
-            // Check if data is an array (direct response)
-            if (Array.isArray(data)) {
-                return data;
-            } else if (data && Array.isArray(data.data)) {
-                // If the API returns { success: true, message: "...", data: [...] }
-                console.log('Extracting orders from data property');
-                return data.data;
-            } else if (data && Array.isArray(data.orders)) {
-                // If the API returns { orders: [...] }
-                return data.orders;
-            } else {
-                console.error('Unexpected data format:', data);
-                throw new Error('API returned unexpected data format');
-            }
-        } catch (parseError) {
-            console.error('Failed to parse response as JSON:', parseError);
-            throw new Error('Invalid JSON response from API');
-        }
-    } catch (error) {
-        console.error('Request failed:', error);
-        throw error;
+  console.log('Making unauthenticated request to orders API...')
+  console.log('URL:', `${url}/orders`)
+
+  try {
+    const response = await fetch(`${url}/orders`)
+    console.log('Response status:', response.status)
+    console.log(
+      'Response headers:',
+      Object.fromEntries(response.headers.entries()),
+    )
+
+    const responseText = await response.text()
+    console.log('Response text:', responseText)
+
+    if (!response.ok) {
+      console.error('API request failed:', response.status, response.statusText)
+      console.error('Response body:', responseText)
+      throw new Error(
+        `API request failed: ${response.status} ${response.statusText}`,
+      )
     }
+
+    // Try to parse as JSON
+    try {
+      const data = JSON.parse(responseText)
+      console.log('Parsed response data:', data)
+
+      // Check if data is an array (direct response)
+      if (Array.isArray(data)) {
+        return data
+      } else if (data && Array.isArray(data.data)) {
+        // If the API returns { success: true, message: "...", data: [...] }
+        console.log('Extracting orders from data property')
+        return data.data
+      } else if (data && Array.isArray(data.orders)) {
+        // If the API returns { orders: [...] }
+        return data.orders
+      } else {
+        console.error('Unexpected data format:', data)
+        throw new Error('API returned unexpected data format')
+      }
+    } catch (parseError) {
+      console.error('Failed to parse response as JSON:', parseError)
+      throw new Error('Invalid JSON response from API')
+    }
+  } catch (error) {
+    console.error('Request failed:', error)
+    throw error
+  }
 }
 
 //  get all orders
-export const getAllOrders = async (): Promise<TOrders[]>=>{
-    const response = await authenticatedFetch(`${url}/orders`)
-    await handleResponseApi(response);
-    return response.json()
+export const getAllOrders = async (): Promise<TOrders[]> => {
+  const response = await authenticatedFetch(`${url}/orders`)
+  await handleResponseApi(response)
+  return response.json()
 }
-// get order by order id 
-export const getOrderById = async (id:number | string):Promise<TOrders>=>{
-    const response = await authenticatedFetch(`${url}/orders/${id}`)
-    await handleResponseApi(response);
-    return response.json()
+// get order by order id
+export const getOrderById = async (id: number | string): Promise<TOrders> => {
+  const response = await authenticatedFetch(`${url}/orders/${id}`)
+  await handleResponseApi(response)
+  return response.json()
 }
 // create a new order
 export const createOrder = async (orderData: TOrders): Promise<TOrders> => {
-    const response = await authenticatedFetch(`${url}/orders`, {
-        method: 'POST',
-        body: JSON.stringify(orderData),
-    });
-    await handleResponseApi(response);
-    return response.json();
-};
+  const response = await authenticatedFetch(`${url}/orders`, {
+    method: 'POST',
+    body: JSON.stringify(orderData),
+  })
+  await handleResponseApi(response)
+  return response.json()
+}
 // update an order
-export const updateOrder = async (id: number | string, orderData: Partial<TOrders>): Promise<TOrders> => {
-    // Remove forbidden fields
-    const {
-        id: _id,
-        created_at,
-        updated_at,
-        shipped_at,
-        delivered_at,
-        user,
-        ...orderDataClean
-    } = orderData;
+export const updateOrder = async (
+  id: number | string,
+  orderData: Partial<TOrders>,
+): Promise<TOrders> => {
+  const { id: _id, user, ...orderDataClean } = orderData
 
-    // Validate status and priority
-    const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
-    const validPriorities = ['low', 'normal', 'high', 'urgent'];
+  // Guaranteed removal of forbidden fields
+  const { shipped_at, delivered_at, ...safeOrderData } = orderDataClean
+  console.log('[UpdateOrder] Final payload sent to backend:', safeOrderData)
 
-    if (orderDataClean.status && !validStatuses.includes(orderDataClean.status)) {
-        throw new Error(`Invalid status: ${orderDataClean.status}`);
-    }
-    if (orderDataClean.priority && !validPriorities.includes(orderDataClean.priority)) {
-        throw new Error(`Invalid priority: ${orderDataClean.priority}`);
-    }
+  // Validate status and priority
+  const validStatuses = [
+    'pending',
+    'confirmed',
+    'processing',
+    'shipped',
+    'delivered',
+    'cancelled',
+  ]
+  const validPriorities = ['low', 'normal', 'high', 'urgent']
 
-    // Debug: Get token from store
-    const { getToken } = await import('@/stores/authStore');
-    const token = getToken();
-    const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-    };
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-        console.log('[UpdateOrder] Using token:', token);
-    } else {
-        console.warn('[UpdateOrder] No token found in store!');
-    }
-    console.log('[UpdateOrder] Headers:', headers);
+  if (safeOrderData.status && !validStatuses.includes(safeOrderData.status)) {
+    throw new Error(`Invalid status: ${safeOrderData.status}`)
+  }
+  if (
+    safeOrderData.priority &&
+    !validPriorities.includes(safeOrderData.priority)
+  ) {
+    throw new Error(`Invalid priority: ${safeOrderData.priority}`)
+  }
 
-    const response = await fetch(`${url}/orders/${id}`, {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify(orderDataClean),
-    });
-    await handleResponseApi(response);
-    return response.json();
-};
+  // Debug: Get token from store
+  const { getToken } = await import('@/stores/authStore')
+  const token = getToken()
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+    console.log('[UpdateOrder] Using token:', token)
+  } else {
+    console.warn('[UpdateOrder] No token found in store!')
+  }
+  console.log('[UpdateOrder] Headers:', headers)
+
+  const response = await fetch(`${url}/orders/${id}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(safeOrderData),
+  })
+  await handleResponseApi(response)
+  return response.json()
+}
 // delete an order
 export const deleteOrder = async (id: number | string): Promise<void> => {
-    const response = await authenticatedFetch(`${url}/orders/${id}`, {
-        method: 'DELETE',
-    });
-    await handleResponseApi(response);
-    return response.json();
-};
+  const response = await authenticatedFetch(`${url}/orders/${id}`, {
+    method: 'DELETE',
+  })
+  await handleResponseApi(response)
+  return response.json()
+}
 // get orders by user id
-export const getOrdersByUserId = async (userId: number | string): Promise<TOrders[]> => {
-    const response = await authenticatedFetch(`${url}/orders/user/${userId}`);
-    await handleResponseApi(response);
-    return response.json();
+export const getOrdersByUserId = async (
+  userId: number | string,
+): Promise<TOrders[]> => {
+  const response = await authenticatedFetch(`${url}/orders/user/${userId}`)
+  await handleResponseApi(response)
+  return response.json()
 }
 // get orders by status
 export const getOrdersByStatus = async (status: string): Promise<TOrders[]> => {
-    const response = await authenticatedFetch(`${url}/orders/status/${status}`);
-    await handleResponseApi(response);
-    return response.json();
+  const response = await authenticatedFetch(`${url}/orders/status/${status}`)
+  await handleResponseApi(response)
+  return response.json()
 }
 // get orders by priority
-export const getOrdersByPriority = async (priority: number): Promise<TOrders[]> => {
-    const response = await authenticatedFetch(`${url}/orders/priority/${priority}`);
-    await handleResponseApi(response);
-    return response.json();
+export const getOrdersByPriority = async (
+  priority: number,
+): Promise<TOrders[]> => {
+  const response = await authenticatedFetch(
+    `${url}/orders/priority/${priority}`,
+  )
+  await handleResponseApi(response)
+  return response.json()
 }

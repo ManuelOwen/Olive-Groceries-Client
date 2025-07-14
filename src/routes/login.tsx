@@ -47,28 +47,19 @@ function RouteComponent() {
         const result = await loginUserMutation.mutateAsync(value)
         console.log('User logged in successfully:', result)
 
-        // Check auth store state after login
-        const currentAuthState = authStore
-        console.log('Auth store after login:', {
-          isAuthenticated: currentAuthState.isAuthenticated,
-          hasToken: !!currentAuthState.token,
-          hasUser: !!currentAuthState.user,
-          userRole: currentAuthState.user?.role,
-        })
-
         // Reset form after successful login
         form.reset()
 
-        // Navigate based on user role from auth store
-        const userRole = currentAuthState.user?.role
+        // Navigate based on user role from the login result
+        const userRole = result?.role
         console.log('Navigating user with role:', userRole)
 
         if (userRole === 'admin') {
-          navigate({ to: '/admin/dashboard' })
+          navigate({ to: '/dashboard/admin' })
         } else if (userRole === 'user') {
           navigate({ to: '/dashboard/user' })
         } else if (userRole === 'driver') {
-          navigate({ to: '/driver/dashboard' })
+          navigate({ to: '/dashboard/driver' })
         } else {
           // Default to products if role is undefined or unknown
           navigate({ to: '/products' })

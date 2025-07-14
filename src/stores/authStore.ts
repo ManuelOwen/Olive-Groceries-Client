@@ -112,15 +112,18 @@ export const getToken = (): string | null => {
 }
 
 export const isAdmin = (): boolean => {
-  return getUserRole() === 'admin'
+  const role = getUserRole()
+  return role === 'admin'
 }
 
 export const isUser = (): boolean => {
-  return getUserRole() === 'user'
+  const role = getUserRole()
+  return role === 'user'
 }
 
 export const isDriver = (): boolean => {
-  return getUserRole() === 'driver'
+  const role = getUserRole()
+  return role === 'driver'
 }
 
 export const isUserVerified = (): boolean => {
