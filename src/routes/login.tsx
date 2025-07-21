@@ -57,7 +57,7 @@ function RouteComponent() {
         if (userRole === 'admin') {
           navigate({ to: '/dashboard/admin' })
         } else if (userRole === 'user') {
-          navigate({ to: '/dashboard/user' })
+          navigate({ to: '/user/dashboard' })
         } else if (userRole === 'driver') {
           navigate({ to: '/dashboard/driver' })
         } else {

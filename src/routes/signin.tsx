@@ -50,7 +50,7 @@ function RouteComponent() {
         if (result.role === 'admin') {
           navigate({ to: '/admin' });
         } else if (result.role === 'user') {
-          navigate({ to: '/dashboard' }); // Using existing dashboard route for users
+          navigate({ to: '/user/dashboard' });
         } else if (result.role === 'driver') {
           navigate({ to: '/dashboard' }); // Using existing dashboard route for drivers
         } else {
@@ -92,11 +92,7 @@ function RouteComponent() {
  
 return (
   <>
-    <Toaster 
-      position="top-right"
-      richColors
-      closeButton
-    />
+    <Toaster position="top-right" richColors closeButton />
     <div className="min-h-screen flex items-center justify-center bg-orange-50 px-4">
     <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-lg border border-orange-200">
       <h3 className='text-orange-400 font-italic mb-2'>Hello 😘,welcome to Olive Groceries</h3>

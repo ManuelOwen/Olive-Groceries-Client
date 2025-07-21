@@ -3,19 +3,18 @@ import { SidebarDashboard } from '@/components/sidebar';
 import { AdminSidebar } from '@/components/Admin/adminSidebar';
 import { UserSidebar } from '@/components/user/userSidebar';
 import { DriverSidebar } from '@/components/drivers/driverDasboard';
-import { isAdmin, isUser, isDriver } from '@/stores/authStore';
+import { useAuthStore } from '@/stores/authStore';
 
 export function LayoutWithSidebar({ children }: { children: React.ReactNode }) {
-  const renderSidebar = () => {
-    if (isAdmin()) return <AdminSidebar />;
-    if (isUser()) return <UserSidebar />;
-    if (isDriver()) return <DriverSidebar />;
-    return <SidebarDashboard />;
-  };
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
+  const role = user?.role;
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {renderSidebar()}
+      {isAuthenticated && role === 'admin' && <AdminSidebar />}
+      {isAuthenticated && role === 'user' && <UserSidebar />}
+      {isAuthenticated && role === 'driver' && <DriverSidebar />}
       <div className="flex-1 flex flex-col overflow-hidden">
         {children}
       </div>

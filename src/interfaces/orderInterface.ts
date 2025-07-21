@@ -37,12 +37,14 @@ export interface TOrders {
     billing_address: string;
     shipped_at: Date;
     delivered_at: string | null;
+    created_at: string; // Added for order creation date
     user_id: number;
     user?: {
         id: number;
         fullName: string;
         email: string;
     };
+    items?: any[];
 }
 
 export enum productCategory {

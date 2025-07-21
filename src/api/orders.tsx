@@ -1,7 +1,106 @@
 import type { TOrders } from '@/interfaces/orderInterface'
-import {  authenticatedFetch } from '@/lib/utils'
+import { authenticatedFetch } from '@/lib/utils'
 
 const url = '/api/v1'
+export const getOrdersByUserId = async (
+  userId: number | string,
+): Promise<TOrders[]> => {
+  console.log('[getOrdersByUserId] Fetching orders for user ID:', userId)
+
+  // Get current user data to check permissions
+  const { getUserData } = await import('@/lib/utils')
+  const currentUser = getUserData()
+  console.log('[getOrdersByUserId] Current user:', currentUser)
+  console.log(
+    '[getOrdersByUserId] Current user ID type:',
+    typeof currentUser?.id,
+  )
+  console.log('[getOrdersByUserId] Requested user ID type:', typeof userId)
+
+  // Convert both IDs to numbers for comparison
+  const currentUserId = Number(currentUser?.id)
+  const requestedUserId = Number(userId)
+
+  console.log('[getOrdersByUserId] Current user ID (number):', currentUserId)
+  console.log(
+    '[getOrdersByUserId] Requested user ID (number):',
+    requestedUserId,
+  )
+  console.log('[getOrdersByUserId] User role:', currentUser?.role)
+
+  // Check if user is requesting their own orders or is admin
+  if (
+    currentUser &&
+    currentUser.role !== 'admin' &&
+    currentUserId !== requestedUserId
+  ) {
+    console.warn(
+      '[getOrdersByUserId] User trying to access another users orders',
+    )
+    console.warn('[getOrdersByUserId] Permission denied:', {
+      currentUserId,
+      requestedUserId,
+      role: currentUser.role,
+      isAdmin: currentUser.role === 'admin',
+      isOwnOrders: currentUserId === requestedUserId,
+    })
+    throw new Error("Unauthorized: Cannot access other user's orders")
+  }
+
+  try {
+    const response = await authenticatedFetch(`${url}/orders/user/${userId}`)
+    console.log('[getOrdersByUserId] Response status:', response.status)
+    console.log(
+      '[getOrdersByUserId] Response headers:',
+      Object.fromEntries(response.headers.entries()),
+    )
+
+    if (response.status === 403) {
+      console.error(
+        '[getOrdersByUserId] 403 Forbidden - Check user permissions',
+      )
+      console.error('[getOrdersByUserId] User details:', {
+        id: currentUserId,
+        role: currentUser?.role,
+        requestedUserId,
+      })
+
+      // Try to get the error details from the response
+      try {
+        const errorData = await response.json()
+        console.error('[getOrdersByUserId] Backend error response:', errorData)
+        throw new Error(
+          `Access denied: ${errorData.message || 'You do not have permission to view these orders'}`,
+        )
+      } catch (parseError) {
+        throw new Error(
+          'Access denied: You do not have permission to view these orders',
+        )
+      }
+    }
+
+    await handleResponseApi(response)
+    const data = await response.json()
+    console.log('[getOrdersByUserId] Successfully fetched orders:', data)
+
+    // Handle different response formats
+    if (data && typeof data === 'object') {
+      if (Array.isArray(data)) {
+        return data
+      } else if (data.data && Array.isArray(data.data)) {
+        return data.data
+      } else if (data.success && data.data && Array.isArray(data.data)) {
+        return data.data
+      }
+    }
+
+    console.warn('[getOrdersByUserId] Unexpected data format:', data)
+    return []
+  } catch (error) {
+    console.error('[getOrdersByUserId] Error fetching orders:', error)
+    throw error
+  }
+}
 // helper functions
 const handleResponseApi = async (response: Response) => {
   if (!response.ok) {
@@ -164,14 +263,6 @@ export const deleteOrder = async (id: number | string): Promise<void> => {
   await handleResponseApi(response)
   return response.json()
 }
-// get orders by user id
-export const getOrdersByUserId = async (
-  userId: number | string,
-): Promise<TOrders[]> => {
-  const response = await authenticatedFetch(`${url}/orders/user/${userId}`)
-  await handleResponseApi(response)
-  return response.json()
-}
 // get orders by status
 export const getOrdersByStatus = async (status: string): Promise<TOrders[]> => {
   const response = await authenticatedFetch(`${url}/orders/status/${status}`)
@@ -187,4 +278,18 @@ export const getOrdersByPriority = async (
   )
   await handleResponseApi(response)
   return response.json()
+}
+
+// Fetch deliveries assigned to a driver
+export const getDeliveriesByDriverId = async (user_id: number | string) => {
+  const response = await authenticatedFetch(`/api/v1/orders/user/${user_id}`)
+  if (!response.ok) {
+    throw new Error('Failed to fetch deliveries')
+  }
+  const data = await response.json()
+  // Handle wrapped response format
+  if (data && data.success && Array.isArray(data.data)) {
+    return data.data
+  }
+  return data
 }

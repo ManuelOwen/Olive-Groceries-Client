@@ -38,6 +38,7 @@ export const useCreateProduct = (): UseMutationResult<TProduct, unknown, TProduc
         },
         onError: (error) => {
             console.error('Error creating product:', error);
+            console.log('error')
         }
     });
 };

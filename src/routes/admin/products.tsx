@@ -89,7 +89,8 @@ function AdminProductsComponent() {
     category: '',
     image: '',
     inStock: true,
-    stock_quantity: 0,
+    quantity: 0, // Use quantity consistently
+    phoneNumber: '',
   })
 
   // Add to component state:
@@ -184,6 +185,14 @@ function AdminProductsComponent() {
       toast.error('Price must not be less than 0.')
       return
     }
+    if (typeof formData.quantity !== 'number' || isNaN(formData.quantity)) {
+      toast.error('Quantity is required and must be a number.')
+      return
+    }
+    if (formData.quantity < 0) {
+      toast.error('Quantity must not be less than 0.')
+      return
+    }
     if (
       !formData.category ||
       typeof formData.category !== 'string' ||
@@ -209,6 +218,9 @@ function AdminProductsComponent() {
     if (typeof formData.price === 'number' && !isNaN(formData.price)) {
       formPayload.append('price', String(formData.price))
     }
+    if (typeof formData.quantity === 'number' && !isNaN(formData.quantity)) {
+      formPayload.append('quantity', String(formData.quantity))
+    }
     formPayload.append('category', formData.category)
     formPayload.append('inStock', String(formData.inStock ?? true))
     formPayload.append('image', imageFile)
@@ -229,6 +241,7 @@ function AdminProductsComponent() {
         image: '',
         inStock: true,
         phoneNumber: '',
+        quantity: 0,
       })
       setImageFile(null)
       toast.success('Product created successfully!')
@@ -675,6 +688,26 @@ function AdminProductsComponent() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
+                      Quantity
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={formData.quantity ?? ''}
+                      required
+                      onChange={(e) => {
+                        const value = e.target.value
+                        setFormData({
+                          ...formData,
+                          quantity: value === '' ? undefined : parseInt(value, 10),
+                        })
+                      }}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                      placeholder="Enter quantity"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
                       Category
                     </label>
                     <select
@@ -782,6 +815,24 @@ function AdminProductsComponent() {
                           price: parseFloat(e.target.value) || 0,
                         })
                       }
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Quantity
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={formData.quantity ?? ''}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        setFormData({
+                          ...formData,
+                          quantity: value === '' ? undefined : parseInt(value, 10),
+                        })
+                      }}
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
                     />
                   </div>

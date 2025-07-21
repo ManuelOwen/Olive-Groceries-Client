@@ -79,7 +79,7 @@ export const UserSidebar = () => {
     {
       name: "Dashboard",
       icon: LayoutDashboard,
-      path: "/dashboard/user",
+      path: "/user/dashboard",
     },
     {
       name: "Products",
@@ -95,7 +95,7 @@ export const UserSidebar = () => {
       icon: ShoppingCart,
       path: "/dashboard/user",
       subItems: [
-        { name: "My Orders", path: "/dashboard/user" },
+        { name: "My Orders", path: "/user/orders" },
        
       ],
     },
@@ -105,7 +105,7 @@ export const UserSidebar = () => {
       icon: Settings,
       path: "/dashboard/user",
       subItems:[
-        { name: "Profile", path: "/dashboard/user" },
+        { name: "Profile", path: "/user/settings/profile" },
       
       ]
     },

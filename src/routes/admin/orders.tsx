@@ -22,27 +22,27 @@ import {
 } from 'lucide-react'
 import { Toaster, toast } from 'sonner'
 import { LayoutWithSidebar } from '@/components/LayoutWithSidebar'
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/stores/authStore'
 
 export const Route = createFileRoute('/admin/orders')({
   beforeLoad: () => {
     // Use direct import and getState for auth store
-    const { user, isAuthenticated, token } = useAuthStore.getState();
+    const { user, isAuthenticated, token } = useAuthStore.getState()
     console.log('Admin orders beforeLoad - auth check:', {
       isAuthenticated,
       hasUser: !!user,
       hasToken: !!token,
       userRole: user?.role,
-    });
+    })
 
     if (!isAuthenticated || !user || !token) {
-      console.log('Admin orders - User not authenticated, redirecting to login');
-      throw redirect({ to: '/login' });
+      console.log('Admin orders - User not authenticated, redirecting to login')
+      throw redirect({ to: '/login' })
     }
 
     if (user.role !== 'admin') {
-      console.log('Admin orders - User not admin, redirecting to dashboard');
-      throw redirect({ to: '/dashboard' });
+      console.log('Admin orders - User not admin, redirecting to dashboard')
+      throw redirect({ to: '/dashboard' })
     }
   },
   component: AdminOrdersComponent,
@@ -180,11 +180,6 @@ function AdminOrdersComponent() {
         {config.label}
       </span>
     )
-  }
-
-  const formatDate = (date: Date | string) => {
-    if (!date) return 'N/A'
-    return new Date(date).toLocaleDateString()
   }
 
   const formatCurrency = (amount: string | number) => {
@@ -418,7 +413,7 @@ function AdminOrdersComponent() {
                       Priority
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Shipped
+                      Shipping Address
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
@@ -455,7 +450,7 @@ function AdminOrdersComponent() {
                         {getPriorityBadge(order.priority)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatDate(order.shipped_at)}
+                        {order.shipping_address}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center space-x-2">

@@ -5,7 +5,7 @@ import { API_URL } from '@/components/api/url';
 
 // Define the type for the user data
 export interface TUser {
-  id: string;
+  id: number | string; // Support both number and string to match backend
   fullName: string;
   email: string;
   // password: string;

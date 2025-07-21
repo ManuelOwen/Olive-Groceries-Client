@@ -13,24 +13,31 @@ import { Route as TestimonialsRouteImport } from './routes/testimonials'
 import { Route as TestApiRouteImport } from './routes/test-api'
 import { Route as SigninRouteImport } from './routes/signin'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as LocationsRouteImport } from './routes/locations'
-import { Route as DriverRouteImport } from './routes/driver'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as UserRouteRouteImport } from './routes/user/route'
+import { Route as DriverRouteRouteImport } from './routes/driver/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductsIndexRouteImport } from './routes/products/index'
-import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as UserProductsRouteImport } from './routes/user/products'
+import { Route as UserOrdersRouteImport } from './routes/user/orders'
+import { Route as UserDashboardRouteImport } from './routes/user/dashboard'
+import { Route as ProductsCartRouteImport } from './routes/products/cart'
+import { Route as LocationsLocationsRouteImport } from './routes/locations/locations'
+import { Route as DriverProfileRouteImport } from './routes/driver/profile'
+import { Route as DriverOrdersRouteImport } from './routes/driver/orders'
+import { Route as DriverDriverRouteImport } from './routes/driver/driver'
+import { Route as DriverDeliveriesRouteImport } from './routes/driver/deliveries'
 import { Route as DriverDashboardRouteImport } from './routes/driver/dashboard'
-import { Route as DashboardUserRouteImport } from './routes/dashboard/user'
-import { Route as DashboardAdminRouteImport } from './routes/dashboard/admin'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminProductsRouteImport } from './routes/admin/products'
 import { Route as AdminOrdersRouteImport } from './routes/admin/orders'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
+import { Route as UserSettingsProfileRouteImport } from './routes/user/settings/profile'
 import { Route as AdminSettingsProfileRouteImport } from './routes/admin/settings/profile'
 
 const TestimonialsRoute = TestimonialsRouteImport.update({
@@ -51,16 +58,6 @@ const SigninRoute = SigninRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LocationsRoute = LocationsRouteImport.update({
-  id: '/locations',
-  path: '/locations',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DriverRoute = DriverRouteImport.update({
-  id: '/driver',
-  path: '/driver',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -88,6 +85,16 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UserRouteRoute = UserRouteRouteImport.update({
+  id: '/user',
+  path: '/user',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DriverRouteRoute = DriverRouteRouteImport.update({
+  id: '/driver',
+  path: '/driver',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -98,30 +105,60 @@ const ProductsIndexRoute = ProductsIndexRouteImport.update({
   path: '/products/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardIndexRoute = DashboardIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DashboardRoute,
-} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const UserProductsRoute = UserProductsRouteImport.update({
+  id: '/products',
+  path: '/products',
+  getParentRoute: () => UserRouteRoute,
+} as any)
+const UserOrdersRoute = UserOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => UserRouteRoute,
+} as any)
+const UserDashboardRoute = UserDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => UserRouteRoute,
+} as any)
+const ProductsCartRoute = ProductsCartRouteImport.update({
+  id: '/products/cart',
+  path: '/products/cart',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocationsLocationsRoute = LocationsLocationsRouteImport.update({
+  id: '/locations/locations',
+  path: '/locations/locations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DriverProfileRoute = DriverProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => DriverRouteRoute,
+} as any)
+const DriverOrdersRoute = DriverOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => DriverRouteRoute,
+} as any)
+const DriverDriverRoute = DriverDriverRouteImport.update({
+  id: '/driver',
+  path: '/driver',
+  getParentRoute: () => DriverRouteRoute,
+} as any)
+const DriverDeliveriesRoute = DriverDeliveriesRouteImport.update({
+  id: '/deliveries',
+  path: '/deliveries',
+  getParentRoute: () => DriverRouteRoute,
+} as any)
 const DriverDashboardRoute = DriverDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => DriverRoute,
-} as any)
-const DashboardUserRoute = DashboardUserRouteImport.update({
-  id: '/user',
-  path: '/user',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardAdminRoute = DashboardAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => DashboardRoute,
+  getParentRoute: () => DriverRouteRoute,
 } as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/users',
@@ -143,6 +180,11 @@ const AdminDashboardRoute = AdminDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AdminRoute,
 } as any)
+const UserSettingsProfileRoute = UserSettingsProfileRouteImport.update({
+  id: '/settings/profile',
+  path: '/settings/profile',
+  getParentRoute: () => UserRouteRoute,
+} as any)
 const AdminSettingsProfileRoute = AdminSettingsProfileRouteImport.update({
   id: '/settings/profile',
   path: '/settings/profile',
@@ -151,13 +193,13 @@ const AdminSettingsProfileRoute = AdminSettingsProfileRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/driver': typeof DriverRouteRouteWithChildren
+  '/user': typeof UserRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
   '/contact': typeof ContactRoute
   '/contacts': typeof ContactsRoute
-  '/dashboard': typeof DashboardRouteWithChildren
-  '/driver': typeof DriverRouteWithChildren
-  '/locations': typeof LocationsRoute
+  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/signin': typeof SigninRoute
   '/test-api': typeof TestApiRoute
@@ -166,21 +208,29 @@ export interface FileRoutesByFullPath {
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/users': typeof AdminUsersRoute
-  '/dashboard/admin': typeof DashboardAdminRoute
-  '/dashboard/user': typeof DashboardUserRoute
   '/driver/dashboard': typeof DriverDashboardRoute
+  '/driver/deliveries': typeof DriverDeliveriesRoute
+  '/driver/driver': typeof DriverDriverRoute
+  '/driver/orders': typeof DriverOrdersRoute
+  '/driver/profile': typeof DriverProfileRoute
+  '/locations/locations': typeof LocationsLocationsRoute
+  '/products/cart': typeof ProductsCartRoute
+  '/user/dashboard': typeof UserDashboardRoute
+  '/user/orders': typeof UserOrdersRoute
+  '/user/products': typeof UserProductsRoute
   '/admin/': typeof AdminIndexRoute
-  '/dashboard/': typeof DashboardIndexRoute
   '/products': typeof ProductsIndexRoute
   '/admin/settings/profile': typeof AdminSettingsProfileRoute
+  '/user/settings/profile': typeof UserSettingsProfileRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/driver': typeof DriverRouteRouteWithChildren
+  '/user': typeof UserRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
   '/contacts': typeof ContactsRoute
-  '/driver': typeof DriverRouteWithChildren
-  '/locations': typeof LocationsRoute
+  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/signin': typeof SigninRoute
   '/test-api': typeof TestApiRoute
@@ -189,24 +239,31 @@ export interface FileRoutesByTo {
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/users': typeof AdminUsersRoute
-  '/dashboard/admin': typeof DashboardAdminRoute
-  '/dashboard/user': typeof DashboardUserRoute
   '/driver/dashboard': typeof DriverDashboardRoute
+  '/driver/deliveries': typeof DriverDeliveriesRoute
+  '/driver/driver': typeof DriverDriverRoute
+  '/driver/orders': typeof DriverOrdersRoute
+  '/driver/profile': typeof DriverProfileRoute
+  '/locations/locations': typeof LocationsLocationsRoute
+  '/products/cart': typeof ProductsCartRoute
+  '/user/dashboard': typeof UserDashboardRoute
+  '/user/orders': typeof UserOrdersRoute
+  '/user/products': typeof UserProductsRoute
   '/admin': typeof AdminIndexRoute
-  '/dashboard': typeof DashboardIndexRoute
   '/products': typeof ProductsIndexRoute
   '/admin/settings/profile': typeof AdminSettingsProfileRoute
+  '/user/settings/profile': typeof UserSettingsProfileRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/driver': typeof DriverRouteRouteWithChildren
+  '/user': typeof UserRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
   '/contact': typeof ContactRoute
   '/contacts': typeof ContactsRoute
-  '/dashboard': typeof DashboardRouteWithChildren
-  '/driver': typeof DriverRouteWithChildren
-  '/locations': typeof LocationsRoute
+  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/signin': typeof SigninRoute
   '/test-api': typeof TestApiRoute
@@ -215,25 +272,32 @@ export interface FileRoutesById {
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/users': typeof AdminUsersRoute
-  '/dashboard/admin': typeof DashboardAdminRoute
-  '/dashboard/user': typeof DashboardUserRoute
   '/driver/dashboard': typeof DriverDashboardRoute
+  '/driver/deliveries': typeof DriverDeliveriesRoute
+  '/driver/driver': typeof DriverDriverRoute
+  '/driver/orders': typeof DriverOrdersRoute
+  '/driver/profile': typeof DriverProfileRoute
+  '/locations/locations': typeof LocationsLocationsRoute
+  '/products/cart': typeof ProductsCartRoute
+  '/user/dashboard': typeof UserDashboardRoute
+  '/user/orders': typeof UserOrdersRoute
+  '/user/products': typeof UserProductsRoute
   '/admin/': typeof AdminIndexRoute
-  '/dashboard/': typeof DashboardIndexRoute
   '/products/': typeof ProductsIndexRoute
   '/admin/settings/profile': typeof AdminSettingsProfileRoute
+  '/user/settings/profile': typeof UserSettingsProfileRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/driver'
+    | '/user'
     | '/about'
     | '/admin'
     | '/contact'
     | '/contacts'
     | '/dashboard'
-    | '/driver'
-    | '/locations'
     | '/login'
     | '/signin'
     | '/test-api'
@@ -242,21 +306,29 @@ export interface FileRouteTypes {
     | '/admin/orders'
     | '/admin/products'
     | '/admin/users'
-    | '/dashboard/admin'
-    | '/dashboard/user'
     | '/driver/dashboard'
+    | '/driver/deliveries'
+    | '/driver/driver'
+    | '/driver/orders'
+    | '/driver/profile'
+    | '/locations/locations'
+    | '/products/cart'
+    | '/user/dashboard'
+    | '/user/orders'
+    | '/user/products'
     | '/admin/'
-    | '/dashboard/'
     | '/products'
     | '/admin/settings/profile'
+    | '/user/settings/profile'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/driver'
+    | '/user'
     | '/about'
     | '/contact'
     | '/contacts'
-    | '/driver'
-    | '/locations'
+    | '/dashboard'
     | '/login'
     | '/signin'
     | '/test-api'
@@ -265,23 +337,30 @@ export interface FileRouteTypes {
     | '/admin/orders'
     | '/admin/products'
     | '/admin/users'
-    | '/dashboard/admin'
-    | '/dashboard/user'
     | '/driver/dashboard'
+    | '/driver/deliveries'
+    | '/driver/driver'
+    | '/driver/orders'
+    | '/driver/profile'
+    | '/locations/locations'
+    | '/products/cart'
+    | '/user/dashboard'
+    | '/user/orders'
+    | '/user/products'
     | '/admin'
-    | '/dashboard'
     | '/products'
     | '/admin/settings/profile'
+    | '/user/settings/profile'
   id:
     | '__root__'
     | '/'
+    | '/driver'
+    | '/user'
     | '/about'
     | '/admin'
     | '/contact'
     | '/contacts'
     | '/dashboard'
-    | '/driver'
-    | '/locations'
     | '/login'
     | '/signin'
     | '/test-api'
@@ -290,28 +369,37 @@ export interface FileRouteTypes {
     | '/admin/orders'
     | '/admin/products'
     | '/admin/users'
-    | '/dashboard/admin'
-    | '/dashboard/user'
     | '/driver/dashboard'
+    | '/driver/deliveries'
+    | '/driver/driver'
+    | '/driver/orders'
+    | '/driver/profile'
+    | '/locations/locations'
+    | '/products/cart'
+    | '/user/dashboard'
+    | '/user/orders'
+    | '/user/products'
     | '/admin/'
-    | '/dashboard/'
     | '/products/'
     | '/admin/settings/profile'
+    | '/user/settings/profile'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DriverRouteRoute: typeof DriverRouteRouteWithChildren
+  UserRouteRoute: typeof UserRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRouteWithChildren
   ContactRoute: typeof ContactRoute
   ContactsRoute: typeof ContactsRoute
-  DashboardRoute: typeof DashboardRouteWithChildren
-  DriverRoute: typeof DriverRouteWithChildren
-  LocationsRoute: typeof LocationsRoute
+  DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
   SigninRoute: typeof SigninRoute
   TestApiRoute: typeof TestApiRoute
   TestimonialsRoute: typeof TestimonialsRoute
+  LocationsLocationsRoute: typeof LocationsLocationsRoute
+  ProductsCartRoute: typeof ProductsCartRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
 }
 
@@ -343,20 +431,6 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/locations': {
-      id: '/locations'
-      path: '/locations'
-      fullPath: '/locations'
-      preLoaderRoute: typeof LocationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/driver': {
-      id: '/driver'
-      path: '/driver'
-      fullPath: '/driver'
-      preLoaderRoute: typeof DriverRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -394,6 +468,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/user': {
+      id: '/user'
+      path: '/user'
+      fullPath: '/user'
+      preLoaderRoute: typeof UserRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/driver': {
+      id: '/driver'
+      path: '/driver'
+      fullPath: '/driver'
+      preLoaderRoute: typeof DriverRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -408,13 +496,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/': {
-      id: '/dashboard/'
-      path: '/'
-      fullPath: '/dashboard/'
-      preLoaderRoute: typeof DashboardIndexRouteImport
-      parentRoute: typeof DashboardRoute
-    }
     '/admin/': {
       id: '/admin/'
       path: '/'
@@ -422,26 +503,75 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/user/products': {
+      id: '/user/products'
+      path: '/products'
+      fullPath: '/user/products'
+      preLoaderRoute: typeof UserProductsRouteImport
+      parentRoute: typeof UserRouteRoute
+    }
+    '/user/orders': {
+      id: '/user/orders'
+      path: '/orders'
+      fullPath: '/user/orders'
+      preLoaderRoute: typeof UserOrdersRouteImport
+      parentRoute: typeof UserRouteRoute
+    }
+    '/user/dashboard': {
+      id: '/user/dashboard'
+      path: '/dashboard'
+      fullPath: '/user/dashboard'
+      preLoaderRoute: typeof UserDashboardRouteImport
+      parentRoute: typeof UserRouteRoute
+    }
+    '/products/cart': {
+      id: '/products/cart'
+      path: '/products/cart'
+      fullPath: '/products/cart'
+      preLoaderRoute: typeof ProductsCartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/locations/locations': {
+      id: '/locations/locations'
+      path: '/locations/locations'
+      fullPath: '/locations/locations'
+      preLoaderRoute: typeof LocationsLocationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/driver/profile': {
+      id: '/driver/profile'
+      path: '/profile'
+      fullPath: '/driver/profile'
+      preLoaderRoute: typeof DriverProfileRouteImport
+      parentRoute: typeof DriverRouteRoute
+    }
+    '/driver/orders': {
+      id: '/driver/orders'
+      path: '/orders'
+      fullPath: '/driver/orders'
+      preLoaderRoute: typeof DriverOrdersRouteImport
+      parentRoute: typeof DriverRouteRoute
+    }
+    '/driver/driver': {
+      id: '/driver/driver'
+      path: '/driver'
+      fullPath: '/driver/driver'
+      preLoaderRoute: typeof DriverDriverRouteImport
+      parentRoute: typeof DriverRouteRoute
+    }
+    '/driver/deliveries': {
+      id: '/driver/deliveries'
+      path: '/deliveries'
+      fullPath: '/driver/deliveries'
+      preLoaderRoute: typeof DriverDeliveriesRouteImport
+      parentRoute: typeof DriverRouteRoute
+    }
     '/driver/dashboard': {
       id: '/driver/dashboard'
       path: '/dashboard'
       fullPath: '/driver/dashboard'
       preLoaderRoute: typeof DriverDashboardRouteImport
-      parentRoute: typeof DriverRoute
-    }
-    '/dashboard/user': {
-      id: '/dashboard/user'
-      path: '/user'
-      fullPath: '/dashboard/user'
-      preLoaderRoute: typeof DashboardUserRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/admin': {
-      id: '/dashboard/admin'
-      path: '/admin'
-      fullPath: '/dashboard/admin'
-      preLoaderRoute: typeof DashboardAdminRouteImport
-      parentRoute: typeof DashboardRoute
+      parentRoute: typeof DriverRouteRoute
     }
     '/admin/users': {
       id: '/admin/users'
@@ -471,6 +601,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDashboardRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/user/settings/profile': {
+      id: '/user/settings/profile'
+      path: '/settings/profile'
+      fullPath: '/user/settings/profile'
+      preLoaderRoute: typeof UserSettingsProfileRouteImport
+      parentRoute: typeof UserRouteRoute
+    }
     '/admin/settings/profile': {
       id: '/admin/settings/profile'
       path: '/settings/profile'
@@ -480,6 +617,44 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface DriverRouteRouteChildren {
+  DriverDashboardRoute: typeof DriverDashboardRoute
+  DriverDeliveriesRoute: typeof DriverDeliveriesRoute
+  DriverDriverRoute: typeof DriverDriverRoute
+  DriverOrdersRoute: typeof DriverOrdersRoute
+  DriverProfileRoute: typeof DriverProfileRoute
+}
+
+const DriverRouteRouteChildren: DriverRouteRouteChildren = {
+  DriverDashboardRoute: DriverDashboardRoute,
+  DriverDeliveriesRoute: DriverDeliveriesRoute,
+  DriverDriverRoute: DriverDriverRoute,
+  DriverOrdersRoute: DriverOrdersRoute,
+  DriverProfileRoute: DriverProfileRoute,
+}
+
+const DriverRouteRouteWithChildren = DriverRouteRoute._addFileChildren(
+  DriverRouteRouteChildren,
+)
+
+interface UserRouteRouteChildren {
+  UserDashboardRoute: typeof UserDashboardRoute
+  UserOrdersRoute: typeof UserOrdersRoute
+  UserProductsRoute: typeof UserProductsRoute
+  UserSettingsProfileRoute: typeof UserSettingsProfileRoute
+}
+
+const UserRouteRouteChildren: UserRouteRouteChildren = {
+  UserDashboardRoute: UserDashboardRoute,
+  UserOrdersRoute: UserOrdersRoute,
+  UserProductsRoute: UserProductsRoute,
+  UserSettingsProfileRoute: UserSettingsProfileRoute,
+}
+
+const UserRouteRouteWithChildren = UserRouteRoute._addFileChildren(
+  UserRouteRouteChildren,
+)
 
 interface AdminRouteChildren {
   AdminDashboardRoute: typeof AdminDashboardRoute
@@ -501,46 +676,21 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
-interface DashboardRouteChildren {
-  DashboardAdminRoute: typeof DashboardAdminRoute
-  DashboardUserRoute: typeof DashboardUserRoute
-  DashboardIndexRoute: typeof DashboardIndexRoute
-}
-
-const DashboardRouteChildren: DashboardRouteChildren = {
-  DashboardAdminRoute: DashboardAdminRoute,
-  DashboardUserRoute: DashboardUserRoute,
-  DashboardIndexRoute: DashboardIndexRoute,
-}
-
-const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
-  DashboardRouteChildren,
-)
-
-interface DriverRouteChildren {
-  DriverDashboardRoute: typeof DriverDashboardRoute
-}
-
-const DriverRouteChildren: DriverRouteChildren = {
-  DriverDashboardRoute: DriverDashboardRoute,
-}
-
-const DriverRouteWithChildren =
-  DriverRoute._addFileChildren(DriverRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DriverRouteRoute: DriverRouteRouteWithChildren,
+  UserRouteRoute: UserRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   AdminRoute: AdminRouteWithChildren,
   ContactRoute: ContactRoute,
   ContactsRoute: ContactsRoute,
-  DashboardRoute: DashboardRouteWithChildren,
-  DriverRoute: DriverRouteWithChildren,
-  LocationsRoute: LocationsRoute,
+  DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   SigninRoute: SigninRoute,
   TestApiRoute: TestApiRoute,
   TestimonialsRoute: TestimonialsRoute,
+  LocationsLocationsRoute: LocationsLocationsRoute,
+  ProductsCartRoute: ProductsCartRoute,
   ProductsIndexRoute: ProductsIndexRoute,
 }
 export const routeTree = rootRouteImport

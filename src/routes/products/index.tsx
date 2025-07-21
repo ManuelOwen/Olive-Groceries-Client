@@ -1,13 +1,15 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { LayoutWithSidebar } from '@/components/LayoutWithSidebar'
 import { LogoutButton } from '@/components/LogoutButton'
-import { Bell, Search, ShoppingCart, Star, Heart, ChevronDown } from 'lucide-react'
+import { Bell, Search, ShoppingCart, Star, Heart, ChevronDown, X } from 'lucide-react'
 import { productService, type TProduct } from '@/hooks/useProducts'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCartStore } from '@/stores/cartStore'
-import { CartSidebar } from '@/components/sidebar'
+// Remove CartSidebar import
+// import { CartSidebar } from '@/components/sidebar'
 import { toast } from 'sonner'
 import { useState, useEffect } from 'react'
+import { useNavigate } from '@tanstack/react-router';
 
 // Product categories from the backend enum
 const PRODUCT_CATEGORIES = [
@@ -36,9 +38,7 @@ function ProductsPage() {
   // (Optional: you can keep this or hardcode 'Products')
   // const getPageTitle = () => 'Products';
 
-  const [showCart, setShowCart] = useState(false)
-  // Removed unused quantities state
-  const { addToCart } = useCartStore()
+  const { addToCart, items, removeFromCart, clearCart, decrementFromCart } = useCartStore()
   const [cartIconClicked, setCartIconClicked] = useState<
     Record<string | number, boolean>
   >({})
@@ -53,6 +53,9 @@ function ProductsPage() {
   })
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false)
+  // Add search query state
+  const [searchQuery, setSearchQuery] = useState('')
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Persist to localStorage
@@ -69,7 +72,6 @@ function ProductsPage() {
       imageUrl: product.imageUrl || product.image,
     })
     toast.success(`${product.product_name} added to cart!`)
-    setShowCart(true)
     setTimeout(() => {
       setCartIconClicked((prev) => ({ ...prev, [product.id]: false }))
     }, 400)
@@ -94,11 +96,20 @@ function ProductsPage() {
     console.log(`Syncing like for product ${productId}: ${isLiked}`)
   }
 
-  // Filter products by selected category
+  // Filter products by selected category and search query
   const filteredProducts = products?.filter((product) => {
-    if (selectedCategory === 'all') return true
-    return product.category === selectedCategory
+    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+    const matchesSearch = searchQuery.trim() === '' ||
+      product.product_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (product.category && product.category.toLowerCase().includes(searchQuery.toLowerCase()));
+    return matchesCategory && matchesSearch;
   }) || []
+
+  // For sidebar width, compute a class based on items.length
+  const getSidebarWidth = () => {
+    // Only use w-64 and max-w-xs for a slim, card-like sidebar
+    return 'w-64 max-w-xs';
+  };
 
   if (isLoading) {
     return <div>Loading products...</div>
@@ -119,6 +130,8 @@ function ProductsPage() {
               type="text"
               placeholder="Search products..."
               className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 w-64"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
             />
             <Search
               className="absolute left-3 top-2.5 text-gray-400"
@@ -178,24 +191,23 @@ function ProductsPage() {
             )}
           </div>
           
-          <button className="p-2 hover:bg-gray-100 rounded-full relative">
-            <Bell size={20} className="text-gray-600" />
-            <span className="absolute top-0 right-0 bg-orange-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              3
-            </span>
+          <button className="p-2 hover:bg-gray-100 rounded-full relative"
+            onClick={() => navigate({ to: '/products/cart' })}
+            aria-label="Show cart"
+          >
+            <ShoppingCart size={24} className="text-gray-600" />
+            {items.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-orange-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {items.length}
+              </span>
+            )}
           </button>
           <LogoutButton />
-          <button
-            className={`bg-orange-300 text-white px-6 py-2 rounded-full shadow-lg hover:bg-orange-500 transition font-semibold cursor-pointer ml-4 duration-300 ${showCart ? 'mr-0 sm:mr-96' : ''}`}
-            onClick={() => setShowCart((v) => !v)}
-          >
-            {showCart ? 'Close Cart' : 'View Cart'}
-          </button>
         </div>
       </header>
       {/* Content Area */}
       <main
-        className={`flex-1 overflow-y-auto p-6 bg-gray-50 transition-all duration-300 ${showCart ? 'mr-0 sm:mr-96' : ''}`}
+        className="flex-1 overflow-y-auto p-6 bg-gray-50 transition-all duration-300"
       >
         {/* Products Grid with animation */}
         <AnimatePresence>
@@ -298,9 +310,13 @@ function ProductsPage() {
                       <span className="text-lg font-bold text-green-600">
                         KSH {product.price}
                       </span>
+                      {product.quantity === 0 && (
+                        <span className="ml-2 px-2 py-1 rounded bg-red-100 text-red-600 text-xs font-semibold">Out of Stock</span>
+                      )}
                       <button
                         className="px-4 py-2 rounded-lg font-medium transition-colors bg-orange-300 text-white hover:bg-orange-500 focus:ring-2 focus:ring-orange-400 focus:outline-none cursor-pointer shadow-md hover:shadow-lg"
-                        onClick={() => handleAddToCart(product)}
+                        onClick={() => product.quantity > 0 && handleAddToCart(product)}
+                        disabled={product.quantity === 0}
                       >
                         <div className="flex items-center">
                           <motion.span
@@ -337,7 +353,6 @@ function ProductsPage() {
           </motion.div>
         </AnimatePresence>
       </main>
-      {showCart && <CartSidebar onClose={() => setShowCart(false)} />}
     </LayoutWithSidebar>
   )
 }

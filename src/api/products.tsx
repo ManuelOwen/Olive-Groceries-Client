@@ -17,6 +17,7 @@ export interface TProduct {
   created_at?: string
   updated_at?: string
   phoneNumber?: string
+  quantity: number
 }
 
 export interface TProductCreate {
@@ -29,6 +30,7 @@ export interface TProductCreate {
   inStock: boolean
   stock_quantity?: number
   phoneNumber?: string
+  quantity: number
 }
 
 // Helper functions

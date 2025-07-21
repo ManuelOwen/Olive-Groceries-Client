@@ -1,3 +1,4 @@
+import Paystack from '@paystack/inline-js'
 import { Link } from '@tanstack/react-router'
 import {
   LayoutDashboard,
@@ -16,7 +17,7 @@ import {
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useCartStore } from '@/stores/cartStore'
-import { toast } from 'sonner'
+// import { toast } from 'sonner'
 import { AnimatePresence, motion } from 'framer-motion'
 
 export const SidebarDashboard = () => {
@@ -82,7 +83,7 @@ export const SidebarDashboard = () => {
     {
       name: 'Dashboard',
       icon: LayoutDashboard,
-      path: '/dashboard',
+      path: '/dashboard/user',
     },
     {
       name: 'Products',
@@ -311,12 +312,14 @@ export const SidebarDashboard = () => {
     </>
   )
 }
-
+// cart functionality
 export function CartSidebar({ onClose }: { onClose?: () => void }) {
   const { items, removeFromCart, clearCart, addToCart, decrementFromCart } =
     useCartStore()
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
 
+  const popup = new Paystack()
+   popup.resumeTransaction('hbvks8r9mgr0zbc')
   // Prevent background scroll when sidebar is open
   useEffect(() => {
     document.body.style.overflow = 'hidden'
@@ -396,7 +399,7 @@ export function CartSidebar({ onClose }: { onClose?: () => void }) {
                       <span className="px-2">{item.quantity}</span>
                       <button
                         className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 text-lg font-bold"
-                        onClick={() => addToCart({ ...item, quantity: 1 })}
+                        onClick={() => addToCart(item.id)}
                         aria-label="Add one"
                       >
                         +
