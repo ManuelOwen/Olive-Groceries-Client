@@ -27,6 +27,7 @@ import { Route as UserProductsRouteImport } from './routes/user/products'
 import { Route as UserOrdersRouteImport } from './routes/user/orders'
 import { Route as UserDashboardRouteImport } from './routes/user/dashboard'
 import { Route as ProductsCartRouteImport } from './routes/products/cart'
+import { Route as PaymentPaystackRouteImport } from './routes/payment/paystack'
 import { Route as LocationsLocationsRouteImport } from './routes/locations/locations'
 import { Route as DriverProfileRouteImport } from './routes/driver/profile'
 import { Route as DriverOrdersRouteImport } from './routes/driver/orders'
@@ -130,6 +131,11 @@ const ProductsCartRoute = ProductsCartRouteImport.update({
   path: '/products/cart',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PaymentPaystackRoute = PaymentPaystackRouteImport.update({
+  id: '/payment/paystack',
+  path: '/payment/paystack',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LocationsLocationsRoute = LocationsLocationsRouteImport.update({
   id: '/locations/locations',
   path: '/locations/locations',
@@ -214,6 +220,7 @@ export interface FileRoutesByFullPath {
   '/driver/orders': typeof DriverOrdersRoute
   '/driver/profile': typeof DriverProfileRoute
   '/locations/locations': typeof LocationsLocationsRoute
+  '/payment/paystack': typeof PaymentPaystackRoute
   '/products/cart': typeof ProductsCartRoute
   '/user/dashboard': typeof UserDashboardRoute
   '/user/orders': typeof UserOrdersRoute
@@ -245,6 +252,7 @@ export interface FileRoutesByTo {
   '/driver/orders': typeof DriverOrdersRoute
   '/driver/profile': typeof DriverProfileRoute
   '/locations/locations': typeof LocationsLocationsRoute
+  '/payment/paystack': typeof PaymentPaystackRoute
   '/products/cart': typeof ProductsCartRoute
   '/user/dashboard': typeof UserDashboardRoute
   '/user/orders': typeof UserOrdersRoute
@@ -278,6 +286,7 @@ export interface FileRoutesById {
   '/driver/orders': typeof DriverOrdersRoute
   '/driver/profile': typeof DriverProfileRoute
   '/locations/locations': typeof LocationsLocationsRoute
+  '/payment/paystack': typeof PaymentPaystackRoute
   '/products/cart': typeof ProductsCartRoute
   '/user/dashboard': typeof UserDashboardRoute
   '/user/orders': typeof UserOrdersRoute
@@ -312,6 +321,7 @@ export interface FileRouteTypes {
     | '/driver/orders'
     | '/driver/profile'
     | '/locations/locations'
+    | '/payment/paystack'
     | '/products/cart'
     | '/user/dashboard'
     | '/user/orders'
@@ -343,6 +353,7 @@ export interface FileRouteTypes {
     | '/driver/orders'
     | '/driver/profile'
     | '/locations/locations'
+    | '/payment/paystack'
     | '/products/cart'
     | '/user/dashboard'
     | '/user/orders'
@@ -375,6 +386,7 @@ export interface FileRouteTypes {
     | '/driver/orders'
     | '/driver/profile'
     | '/locations/locations'
+    | '/payment/paystack'
     | '/products/cart'
     | '/user/dashboard'
     | '/user/orders'
@@ -399,6 +411,7 @@ export interface RootRouteChildren {
   TestApiRoute: typeof TestApiRoute
   TestimonialsRoute: typeof TestimonialsRoute
   LocationsLocationsRoute: typeof LocationsLocationsRoute
+  PaymentPaystackRoute: typeof PaymentPaystackRoute
   ProductsCartRoute: typeof ProductsCartRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
 }
@@ -529,6 +542,13 @@ declare module '@tanstack/react-router' {
       path: '/products/cart'
       fullPath: '/products/cart'
       preLoaderRoute: typeof ProductsCartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payment/paystack': {
+      id: '/payment/paystack'
+      path: '/payment/paystack'
+      fullPath: '/payment/paystack'
+      preLoaderRoute: typeof PaymentPaystackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/locations/locations': {
@@ -690,6 +710,7 @@ const rootRouteChildren: RootRouteChildren = {
   TestApiRoute: TestApiRoute,
   TestimonialsRoute: TestimonialsRoute,
   LocationsLocationsRoute: LocationsLocationsRoute,
+  PaymentPaystackRoute: PaymentPaystackRoute,
   ProductsCartRoute: ProductsCartRoute,
   ProductsIndexRoute: ProductsIndexRoute,
 }
