@@ -1,4 +1,5 @@
-// Demo Paystack payment popup React component for testing Paystack integration
+// NOTE: React components should not be placed in .spec.ts files. Rename this file to .tsx to use the component below.
+/*
 import React from 'react'
 import Paystack from '@paystack/inline-js'
 
@@ -6,7 +7,7 @@ const PaystackDemoButton: React.FC = () => {
   const handlePaystackPayment = () => {
     const paystack = new Paystack();
     paystack.newTransaction({
-      key: 'sk_test_9c9dbfb64727d1f10d66e9e07c65c3aa4ba92113', 
+      key: 'pk_test_dea6c2d0dce3fa2e9dbeacaed823a08d74cf3863',
       email: 'owenmannuu9@gmail.com',
       amount: 5000,
       onSuccess: (transaction: any) => {
@@ -37,3 +38,4 @@ const PaystackDemoButton: React.FC = () => {
 };
 
 export default PaystackDemoButton;
+*/
