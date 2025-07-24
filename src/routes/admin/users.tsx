@@ -274,19 +274,19 @@ function AdminUsersComponent() {
           <div className="flex gap-2">
             <button
               onClick={() => setViewMode('table')}
-              className={`px-4 py-2 rounded-l-lg border ${viewMode === 'table' ? 'bg-orange-600 text-white' : 'bg-orange-300 text-orange-600 border-orange-600'} transition-colors`}
+              className={`px-4 py-2 rounded-l-lg border ${viewMode === 'table' ? 'bg-orange-300 text-white' : 'bg-orange-300 text-white-300 border-orange-600'} transition-colors`}
             >
               Table View
             </button>
             <button
               onClick={() => setViewMode('card')}
-              className={`px-4 py-2 rounded-r-lg border-l-0 border ${viewMode === 'card' ? 'bg-orange-600 text-white' : 'bg-orange-300 text-orange-600 border-orange-600'} transition-colors`}
+              className={`px-4 py-2 rounded-r-lg border-l-0 border ${viewMode === 'card' ? 'bg-orange-300 text-white' : 'bg-orange-300 text-white-300 border-orange-300'} transition-colors`}
             >
               Card View
             </button>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="inline-flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors ml-4"
+              className="inline-flex items-center px-4 py-2 bg-orange-300 text-white rounded-lg hover:bg-orange-300 transition-colors ml-4"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add User
@@ -304,7 +304,7 @@ function AdminUsersComponent() {
                   placeholder="Search users..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-300 focus:border-orange-500"
                 />
               </div>
             </div>
@@ -314,7 +314,7 @@ function AdminUsersComponent() {
                 <select
                   value={roleFilter}
                   onChange={(e) => setRoleFilter(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-300 focus:border-orange-300"
                 >
                   <option value="all">All Roles</option>
                   <option value="admin">Admin</option>
@@ -342,7 +342,7 @@ function AdminUsersComponent() {
                       </div>
                     </div>
                     <div className="ml-4 flex-1">
-                      <div className="text-lg font-semibold text-gray-900 transition-colors duration-300 group-hover:text-orange-600">
+                      <div className="text-lg font-semibold text-gray-900 transition-colors duration-300 group-hover:text-orange-300">
                         {user.fullName}
                       </div>
                       <div className="text-sm text-gray-500">ID: {user.id}</div>
@@ -368,7 +368,7 @@ function AdminUsersComponent() {
                   <div className="flex justify-end space-x-2 pt-4 border-t border-gray-100">
                     <button
                       onClick={() => openEditModal(user)}
-                      className="inline-flex items-center px-3 py-2 text-sm font-medium text-orange-600 bg-orange-50 rounded-md hover:bg-orange-100 transition-colors"
+                      className="inline-flex items-center px-3 py-2 text-sm font-medium text-white-300 bg-orange-50 rounded-md hover:bg-orange-200 transition-colors"
                       title="Edit User"
                     >
                       <Edit className="h-4 w-4 mr-1" />

@@ -4,7 +4,8 @@ import TanStackQueryLayout from '../integrations/tanstack-query/layout.tsx'
 import type { QueryClient } from '@tanstack/react-query'
 import Header from '@/components/Header.tsx'
 import Footer from '@/components/footer.tsx'
-import { Toaster } from 'sonner' 
+import { Toaster } from 'sonner'
+import ChatInterface from '@/routes/oliveAI/chatAi'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -18,7 +19,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       <Footer />
       <TanStackQueryLayout />
       <TanStackRouterDevtools />
-      <Toaster position="top-right" richColors /> 
+      <Toaster position="top-right" richColors />
+      <ChatInterface />
     </>
   ),
 })
