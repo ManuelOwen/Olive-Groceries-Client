@@ -1,5 +1,5 @@
 import { useQuery, useMutation, type UseMutationResult, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
-import { createOrder, deleteOrder, getAllOrders, getAllOrdersWithoutAuth, updateOrder, getDeliveriesByDriverId, getOrdersByUserId } from '../api/orders';
+import { createOrder, deleteOrder, getAllOrders, getAllOrdersWithoutAuth, updateOrder,  getOrdersByUserId } from '../api/orders';
 import type { OrderStatus, TOrders } from '@/interfaces/orderInterface';
 
 //  fetch users
@@ -7,7 +7,7 @@ import type { OrderStatus, TOrders } from '@/interfaces/orderInterface';
 export const orderService = () => {
     const { data, isLoading, isError, error } = useQuery({
         queryKey: ['orders'],
-        queryFn: getAllOrdersWithoutAuth, // Temporarily using non-authenticated version
+        queryFn: getAllOrdersWithoutAuth, 
         // refetchOnWindowFocus: false,
     });
 

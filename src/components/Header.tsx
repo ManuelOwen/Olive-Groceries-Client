@@ -1,10 +1,17 @@
 import { Link } from '@tanstack/react-router'
 import {  VeganIcon } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
+import { Moon, Sun } from 'lucide-react'
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window !== 'undefined') {
+      return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    }
+    return 'light';
+  });
   const sidebarRef = useRef<HTMLDivElement>(null)
 
   // Close sidebar on outside click
@@ -18,6 +25,17 @@ export default function Header() {
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [isSidebarOpen])
+
+  // Theme toggle handler
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
@@ -76,6 +94,19 @@ export default function Header() {
             >
               Sign In
             </Link>
+            <Link
+              to="/login"
+              className="text-gray-700 hover font-medium transition-colors px-4 py-2 "
+            >
+              Login
+            </Link>
+            <button
+              onClick={toggleTheme}
+              className="ml-2 p-2 rounded-full border border-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              aria-label="Toggle theme"
+            >
+              {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+            </button>
           </div>
 
           {/* Mobile menu button */}
@@ -139,6 +170,24 @@ export default function Header() {
                 >
                   Sign In
                 </Link>
+                <Link
+                  to="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block text-white bg-blue-600 hover:bg-blue-700 font-medium transition-colors text-center px-4 py-2 rounded shadow"
+                >
+                  Login
+                </Link>
+                <button
+                  onClick={() => {
+                    toggleTheme();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 font-medium transition-colors text-center px-4 py-2 rounded shadow mt-2"
+                  aria-label="Toggle theme"
+                >
+                  {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+                  <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+                </button>
               </div>
             </nav>
           </div>
@@ -151,43 +200,8 @@ export default function Header() {
 
 
 
-        {/* Sidebar overlay and panel */}
-       {/* {isSidebarOpen && (
-          // Only the sidebar panel, no overlay
-          <div
-            ref={sidebarRef}
-            className="fixed top-0 left-0 h-full w-64 bg-white shadow-lg p-6 flex flex-col gap-6 z-50 transition-transform duration-300 transform translate-x-0 animate-slide-in-left"
-            style={{ maxWidth: '80vw' }}
-          >
-            <button
-              className="absolute top-4 right-4 p-2 rounded-md hover:bg-gray-100 focus:outline-none"
-              onClick={() => setIsSidebarOpen(false)}
-              aria-label="Close sidebar"
-            >
-              <XIcon className="h-6 w-6 text-gray-700" />
-            </button>
-            <nav className="flex flex-col gap-4 mt-8">
-              <Link
-                to="/admin/users"
-                className="text-gray-700 hover:text-blue-600 font-semibold text-lg"
-              >
-                Users
-              </Link>
-              <Link
-                to="/testimonials"
-                className="text-gray-700 hover:text-blue-600 font-semibold text-lg"
-              >
-                Testimonials
-              </Link>
-              <Link
-                to="/locations"
-                className="text-gray-700 hover:text-blue-600 font-semibold text-lg"
-              >
-                Locations
-              </Link>
-            </nav>
-          </div>
-        )} */}
+  
+      
       </div>
     </header>
   )

@@ -79,6 +79,9 @@ function AdminUsersComponent() {
     role: userRole.User,
   })
 
+  // Add view mode state
+  const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
+
   // Filter and search users
   const filteredUsers = Array.isArray(users)
     ? users.filter((user) => {
@@ -166,7 +169,7 @@ function AdminUsersComponent() {
     // Validate phone number format
     if (
       userUpdatePayload.phoneNumber &&
-      !/^\+2547\d{8}$/.test(userUpdatePayload.phoneNumber)
+      !/^\+2547\d{8}$/.test(String(userUpdatePayload.phoneNumber))
     ) {
       toast.error('Phone number must be in the format +2547XXXXXXXX')
       return
@@ -175,7 +178,7 @@ function AdminUsersComponent() {
     try {
       await updateUserMutation.mutateAsync({
         id: selectedUser.id.toString(),
-        user: userUpdatePayload as TUser,
+        user: userUpdatePayload as unknown as TUser,
       })
       setShowEditModal(false)
       setSelectedUser(null)
@@ -262,24 +265,34 @@ function AdminUsersComponent() {
       <div className="p-6">
         <h1 className="text-2xl font-bold mb-4">Users</h1>
         <Toaster position="top-right" richColors closeButton />
-
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Users Management
-            </h1>
+            <h1 className="text-2xl font-bold text-gray-900">Users Management</h1>
             <p className="text-gray-600">Manage all registered users</p>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="inline-flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add User
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setViewMode('table')}
+              className={`px-4 py-2 rounded-l-lg border ${viewMode === 'table' ? 'bg-orange-600 text-white' : 'bg-orange-300 text-orange-600 border-orange-600'} transition-colors`}
+            >
+              Table View
+            </button>
+            <button
+              onClick={() => setViewMode('card')}
+              className={`px-4 py-2 rounded-r-lg border-l-0 border ${viewMode === 'card' ? 'bg-orange-600 text-white' : 'bg-orange-300 text-orange-600 border-orange-600'} transition-colors`}
+            >
+              Card View
+            </button>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="inline-flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors ml-4"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add User
+            </button>
+          </div>
         </div>
-
         {/* Filters and Search */}
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -312,144 +325,163 @@ function AdminUsersComponent() {
             </div>
           </div>
         </div>
-
-        {/* Users Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {currentUsers.map((user) => (
-            <div
-              key={user.id}
-              className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 cursor-pointer transform transition-all duration-300 ease-in-out hover:shadow-2xl hover:scale-105 hover:border-orange-200 hover:-translate-y-1"
-            >
-              {/* User Avatar and Basic Info */}
-              <div className="flex items-center mb-4">
-                <div className="flex-shrink-0 h-12 w-12">
-                  <div className="h-12 w-12 rounded-full bg-orange-100 flex items-center justify-center transition-all duration-300 group-hover:bg-orange-200">
-                    <User className="h-6 w-6 text-orange-600 transition-colors duration-300" />
+        {/* Card View */}
+        {viewMode === 'card' && (
+          <div className="overflow-y-auto max-h-[600px] mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {currentUsers.map((user) => (
+                <div
+                  key={user.id}
+                  className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 cursor-pointer transform transition-all duration-300 ease-in-out hover:shadow-2xl hover:scale-105 hover:border-orange-200 hover:-translate-y-1"
+                >
+                  {/* User Avatar and Basic Info */}
+                  <div className="flex items-center mb-4">
+                    <div className="flex-shrink-0 h-12 w-12">
+                      <div className="h-12 w-12 rounded-full bg-orange-100 flex items-center justify-center transition-all duration-300 group-hover:bg-orange-200">
+                        <User className="h-6 w-6 text-orange-600 transition-colors duration-300" />
+                      </div>
+                    </div>
+                    <div className="ml-4 flex-1">
+                      <div className="text-lg font-semibold text-gray-900 transition-colors duration-300 group-hover:text-orange-600">
+                        {user.fullName}
+                      </div>
+                      <div className="text-sm text-gray-500">ID: {user.id}</div>
+                    </div>
+                    <div className="flex-shrink-0">{getRoleBadge(String(user.role))}</div>
+                  </div>
+                  {/* Contact Information */}
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Mail className="h-4 w-4 mr-3 text-gray-400 flex-shrink-0" />
+                      <span className="truncate">{user.email}</span>
+                    </div>
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Phone className="h-4 w-4 mr-3 text-gray-400 flex-shrink-0" />
+                      <span>{user.phoneNumber}</span>
+                    </div>
+                    <div className="flex items-start text-sm text-gray-600">
+                      <MapPin className="h-4 w-4 mr-3 text-gray-400 flex-shrink-0 mt-0.5" />
+                      <span className="line-clamp-2">{user.address}</span>
+                    </div>
+                  </div>
+                  {/* Action Buttons */}
+                  <div className="flex justify-end space-x-2 pt-4 border-t border-gray-100">
+                    <button
+                      onClick={() => openEditModal(user)}
+                      className="inline-flex items-center px-3 py-2 text-sm font-medium text-orange-600 bg-orange-50 rounded-md hover:bg-orange-100 transition-colors"
+                      title="Edit User"
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => openDeleteModal(user)}
+                      className="inline-flex items-center px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-md hover:bg-red-100 transition-colors"
+                      title="Delete User"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Delete
+                    </button>
                   </div>
                 </div>
-                <div className="ml-4 flex-1">
-                  <div className="text-lg font-semibold text-gray-900 transition-colors duration-300 group-hover:text-orange-600">
-                    {user.fullName}
-                  </div>
-                  <div className="text-sm text-gray-500">ID: {user.id}</div>
-                </div>
-                <div className="flex-shrink-0">
-                  {getRoleBadge(String(user.role))}
-                </div>
-              </div>
-
-              {/* Contact Information */}
-              <div className="space-y-3 mb-4">
-                <div className="flex items-center text-sm text-gray-600">
-                  <Mail className="h-4 w-4 mr-3 text-gray-400 flex-shrink-0" />
-                  <span className="truncate">{user.email}</span>
-                </div>
-                <div className="flex items-center text-sm text-gray-600">
-                  <Phone className="h-4 w-4 mr-3 text-gray-400 flex-shrink-0" />
-                  <span>{user.phoneNumber}</span>
-                </div>
-                <div className="flex items-start text-sm text-gray-600">
-                  <MapPin className="h-4 w-4 mr-3 text-gray-400 flex-shrink-0 mt-0.5" />
-                  <span className="line-clamp-2">{user.address}</span>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex justify-end space-x-2 pt-4 border-t border-gray-100">
+              ))}
+            </div>
+            {/* Pagination for Card View */}
+            {totalPages > 1 && (
+              <div className="flex justify-center mt-6">
                 <button
-                  onClick={() => openEditModal(user)}
-                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-orange-600 bg-orange-50 rounded-md hover:bg-orange-100 transition-colors"
-                  title="Edit User"
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 border border-gray-300 rounded-l-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                 >
-                  <Edit className="h-4 w-4 mr-1" />
-                  Edit
+                  Previous
                 </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-4 py-2 border-t border-b border-gray-300 bg-white text-gray-700 hover:bg-gray-50 ${currentPage === page ? 'bg-orange-100 text-orange-600 font-bold' : ''}`}
+                  >
+                    {page}
+                  </button>
+                ))}
                 <button
-                  onClick={() => openDeleteModal(user)}
-                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-md hover:bg-red-100 transition-colors"
-                  title="Delete User"
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 border border-gray-300 rounded-r-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                 >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Delete
+                  Next
                 </button>
               </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="bg-white px-4 py-3 flex items-center justify-between border border-gray-200 rounded-lg sm:px-6">
-            <div className="flex-1 flex justify-between sm:hidden">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                }
-                disabled={currentPage === totalPages}
-                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next
-              </button>
-            </div>
-            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-gray-700">
-                  Showing <span className="font-medium">{startIndex + 1}</span>{' '}
-                  to{' '}
-                  <span className="font-medium">
-                    {Math.min(endIndex, filteredUsers.length)}
-                  </span>{' '}
-                  of <span className="font-medium">{filteredUsers.length}</span>{' '}
-                  results
-                </p>
-              </div>
-              <div>
-                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+            )}
+          </div>
+        )}
+        {/* Table View */}
+        {viewMode === 'table' && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mt-6 overflow-x-auto">
+            <table className="w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Full Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {currentUsers.map((user) => (
+                  <tr key={user.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.id}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.fullName}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.phoneNumber}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.address}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getRoleBadge(String(user.role))}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center space-x-2">
+                        <button onClick={() => openEditModal(user)} className="text-orange-600 hover:text-orange-900 p-1 rounded" title="Edit">
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        <button onClick={() => openDeleteModal(user)} className="text-red-600 hover:text-red-900 p-1 rounded" title="Delete">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {/* Pagination for Table View */}
+            {totalPages > 1 && (
+              <div className="flex justify-center mt-6">
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 border border-gray-300 rounded-l-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                   <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
-                    disabled={currentPage === 1}
-                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-4 py-2 border-t border-b border-gray-300 bg-white text-gray-700 hover:bg-gray-50 ${currentPage === page ? 'bg-orange-100 text-orange-600 font-bold' : ''}`}
                   >
-                    <ChevronLeft className="h-5 w-5" />
+                    {page}
                   </button>
-
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                    (page) => (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          currentPage === page
-                            ? 'z-10 bg-orange-50 border-orange-500 text-orange-600'
-                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ),
-                  )}
-
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                    }
-                    disabled={currentPage === totalPages}
-                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronRight className="h-5 w-5" />
-                  </button>
-                </nav>
+                ))}
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 border border-gray-300 rounded-r-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Next
+                </button>
               </div>
-            </div>
+            )}
           </div>
         )}
       </div>

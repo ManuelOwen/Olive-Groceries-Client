@@ -8,10 +8,10 @@ export interface TUser {
   id: number | string; // Support both number and string to match backend
   fullName: string;
   email: string;
-  // password: string;
   address: string;
   phoneNumber: string;
   role?: 'admin' | 'user' | 'driver'; // Add role property
+  token?: string; // Add token property to ensure it can be stored if needed
 }
 // Define the type for the user registration data
 export interface TUserRegister {
@@ -43,8 +43,15 @@ export const useLoginUser = (): UseMutationResult<TUser, Error, TUserLogin> => {
   return useMutation({
     mutationFn: async (user: TUserLogin) => {
       const result = await loginUser(user);
-      console.log('Login mutation result:', result);
-      return result;
+      // Ensure token is included in the returned user object for storage
+      if (result && typeof result.token === 'string' && result.token) {
+        return result;
+      } else {
+        // Try to get token from store if not present
+        const { getToken } = await import('@/stores/authStore');
+        const token = getToken() || '';
+        return { ...result, token } as TUser;
+      }
     },
     onSuccess: (user) => {
       console.log('Login successful, user:', user);
@@ -91,7 +98,7 @@ export const userService = () => {
       await handleApiResponse(response);
       const data = await response.json();
 
-      // Handle wrapped response (e.g., { success: true, data: [...] })
+      // Handle wrapped response 
       if (data.data && Array.isArray(data.data)) {
         return data.data;
       }

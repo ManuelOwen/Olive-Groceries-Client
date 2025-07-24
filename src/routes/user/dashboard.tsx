@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { API_URL } from '@/components/api/url';
 import { OrderStatus } from '@/interfaces/orderInterface';
 import type { TOrders } from '@/interfaces/orderInterface';
+import { useNavigate } from '@tanstack/react-router'
+import React from 'react';
 
 interface Payment {
   id: number | string;
@@ -41,6 +43,8 @@ export const Route = createFileRoute('/user/dashboard')({
 function RouteComponent() {
   const { user, token } = useAuthStore();
   const userId = user?.id as string | number | undefined;
+  const navigate = useNavigate();
+  const [checkingAuth, setCheckingAuth] = React.useState(true);
 
   // Fetch all orders for the user
   const {
@@ -63,6 +67,18 @@ function RouteComponent() {
     queryFn: () => fetchUserPayments(userId as string | number, token as string),
     enabled: !!userId && !!token,
   });
+
+  // Only redirect drivers if user is loaded and role is driver
+  React.useEffect(() => {
+    if (user && user.role === 'driver') {
+      navigate({ to: '/driver/dashboard' });
+    }
+    setCheckingAuth(false);
+  }, [user, navigate]);
+
+  if (checkingAuth) {
+    return <div className="p-6">Loading...</div>;
+  }
 
   // Pending orders = cart
   const pendingOrders = orders.filter((order: TOrders) => order.status === OrderStatus.PENDING);

@@ -37,7 +37,7 @@ export interface TOrders {
     billing_address: string;
     shipped_at: Date;
     delivered_at: string | null;
-    created_at: string; // Added for order creation date
+    created_at: string; 
     user_id: number;
     user?: {
         id: number;

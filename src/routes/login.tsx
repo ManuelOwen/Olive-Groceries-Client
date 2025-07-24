@@ -47,6 +47,9 @@ function RouteComponent() {
         const result = await loginUserMutation.mutateAsync(value)
         console.log('User logged in successfully:', result)
 
+        // Set user and token in auth store
+        authStore.login(result, result.token)
+
         // Reset form after successful login
         form.reset()
 
@@ -55,11 +58,11 @@ function RouteComponent() {
         console.log('Navigating user with role:', userRole)
 
         if (userRole === 'admin') {
-          navigate({ to: '/dashboard/admin' })
+          navigate({ to: '/admin/dashboard' })
         } else if (userRole === 'user') {
           navigate({ to: '/user/dashboard' })
         } else if (userRole === 'driver') {
-          navigate({ to: '/dashboard/driver' })
+          navigate({ to: '/driver/dashboard' })
         } else {
           // Default to products if role is undefined or unknown
           navigate({ to: '/products' })

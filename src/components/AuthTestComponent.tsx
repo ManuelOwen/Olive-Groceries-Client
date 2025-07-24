@@ -36,8 +36,8 @@ export const AuthTestComponent = () => {
     try {
       // Test with a sample user (you'll need to replace with actual credentials)
       const loginData = {
-        email: 'admin@example.com', // Replace with actual admin email
-        password: 'password123'     // Replace with actual password
+        email: 'admin@example.com', 
+        password: 'password123'     
       };
       
       console.log('Attempting login with:', loginData);

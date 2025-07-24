@@ -48,6 +48,14 @@ export const getOrdersByUserId = async (
   }
 
   try {
+    // Debug: Get token from store
+    const { getToken } = await import('@/stores/authStore');
+    const token = getToken();
+    console.log('[getOrdersByUserId] Token being sent:', token);
+    // If you want to see headers, you can also log them:
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+    console.log('[getOrdersByUserId] Headers being sent:', headers);
+
     const response = await authenticatedFetch(`${url}/orders/user/${userId}`)
     console.log('[getOrdersByUserId] Response status:', response.status)
     console.log(
@@ -233,7 +241,7 @@ export const updateOrder = async (
     throw new Error(`Invalid priority: ${safeOrderData.priority}`)
   }
 
-  // Debug: Get token from store
+  //  Get token from store
   const { getToken } = await import('@/stores/authStore')
   const token = getToken()
   const headers: Record<string, string> = {

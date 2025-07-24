@@ -399,7 +399,14 @@ export function CartSidebar({ onClose }: { onClose?: () => void }) {
                       <span className="px-2">{item.quantity}</span>
                       <button
                         className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 text-lg font-bold"
-                        onClick={() => addToCart(item.id)}
+                        onClick={() =>
+                          addToCart({
+                            id: item.id,
+                            product_name: item.product_name,
+                            price: item.price,
+                            imageUrl: item.imageUrl,
+                          })
+                        }
                         aria-label="Add one"
                       >
                         +

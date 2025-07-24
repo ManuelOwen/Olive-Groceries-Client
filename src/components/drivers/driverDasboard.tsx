@@ -132,7 +132,7 @@ export const DriverSidebar = () => {
         {/* Logo */}
         <div className="p-4 border-b border-gray-200 flex items-center justify-between">
           <Link
-            to="/dashboard"
+            to="/driver/dashboard"
             className="flex items-center space-x-2 min-w-max"
           >
             <div className="bg-orange-400 text-white p-2 rounded-lg">

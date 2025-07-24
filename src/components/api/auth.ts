@@ -75,24 +75,24 @@ export const loginUser = async (userData: {
   let token: string;
 
   if (data.user && data.accessToken) {
-    // Our backend format: { accessToken, refreshToken, user: { ... } }
+ 
     user = data.user;
     token = data.accessToken;
   } else if (data.data && data.token) {
-    // Format: { success: true, data: user, token: "..." }
+   
     user = data.data;
     token = data.token;
   } else if (data.user && data.token) {
-    // Format: { user: {...}, token: "..." }
+
     user = data.user;
     token = data.token;
   } else if (data.token && (data.id || data.email)) {
-    // Format: { id, email, role, ..., token }
+  
     token = data.token;
     user = { ...data };
     delete (user as any).token; // Remove token from user object
   } else if (data.access_token) {
-    // Format: { access_token: "...", user: {...} } or { access_token: "...", id, email, ... }
+    
     token = data.access_token;
     user = data.user || data;
   } else if (data.accessToken) {

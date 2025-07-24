@@ -1,74 +1,152 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { isUserVerified, getUserData } from '@/lib/utils'
-import { redirect } from '@tanstack/react-router'
+import { useAuthStore } from '@/stores/authStore';
+import { useDriverDeliveries, useUpdateOrder, useDeleteOrder } from '@/hooks/useOrders';
+import { useState } from 'react';
+import type { TOrders } from '@/interfaces/orderInterface';
 
 export const Route = createFileRoute('/driver/dashboard')({
-  beforeLoad: () => {
-    const userData = getUserData()
-    const isVerified = isUserVerified(userData)
-    console.log('User verification status:', isVerified)
-    if (!isVerified) {
-      throw redirect({ to: '/login' })
-    }
-  },
-  component: DriverDashboard,
+  component: RouteComponent,
 })
 
-function DriverDashboard() {
-  const userData = getUserData()
+function RouteComponent() {
+  const { user } = useAuthStore();
+  const driverId = user?.id;
+  const isDriverIdValid = typeof driverId === 'string' || typeof driverId === 'number';
+  const { data: orders = [], isLoading, isError, error } = useDriverDeliveries(isDriverIdValid ? driverId : '');
+  const updateOrder = useUpdateOrder();
+  const deleteOrder = useDeleteOrder();
+  const [editId, setEditId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState<any>({});
 
-  return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Welcome back, {userData?.fullName || 'Driver'}! 🚛
-        </h1>
-        <p className="text-gray-600">
-          Your delivery dashboard. Check your routes and orders.
-        </p>
+  // Group orders by status
+  const toDeliver = orders.filter((order: TOrders) => order.status !== 'delivered' && order.status !== 'cancelled');
+  const delivered = orders.filter((order: TOrders) => order.status === 'delivered');
+  const existing = orders; // All orders
+
+  const handleEdit = (order: TOrders) => {
+    setEditId(order.id);
+    setEditForm({
+      status: order.status,
+      shipping_address: order.shipping_address,
+    });
+  };
+
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setEditForm({ ...editForm, [e.target.name]: e.target.value });
+  };
+
+  const handleEditSave = (id: number) => {
+    updateOrder.mutate({ id: String(id), order: editForm });
+    setEditId(null);
+  };
+
+  const handleDelete = (id: number) => {
+    if (window.confirm('Are you sure you want to delete this order?')) {
+      deleteOrder.mutate(String(id));
+    }
+  };
+
+  if (isLoading) return <div className="p-6">Loading orders...</div>;
+  if (isError) return <div className="p-6 text-red-500">Error: {error?.message || 'Failed to load orders.'}</div>;
+
+  const renderOrderCard = (order: TOrders) => (
+    <div key={order.id} className="bg-white shadow rounded-lg p-4 mb-4 border border-gray-200">
+      <div className="flex justify-between items-center mb-2">
+        <div>
+          <span className="font-bold">Order #</span> {order.order_number}
+        </div>
+        <span className={`px-2 py-1 rounded text-xs font-semibold ${order.status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{order.status}</span>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-orange-400">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Active Deliveries
-          </h3>
-          <p className="text-3xl font-bold text-orange-400 mt-2">5</p>
-          <p className="text-gray-600 text-sm">Currently in progress</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-green-400">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Completed Today
-          </h3>
-          <p className="text-3xl font-bold text-green-400 mt-2">12</p>
-          <p className="text-gray-600 text-sm">Successfully delivered</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-400">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Total Distance
-          </h3>
-          <p className="text-3xl font-bold text-blue-400 mt-2">45 km</p>
-          <p className="text-gray-600 text-sm">Distance covered today</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-purple-400">
-          <h3 className="text-lg font-semibold text-gray-900">Earnings</h3>
-          <p className="text-3xl font-bold text-purple-400 mt-2">$120</p>
-          <p className="text-gray-600 text-sm">Today's earnings</p>
-        </div>
+      <div className="mb-2">
+        <span className="font-semibold">Shipping Address:</span> {editId === order.id ? (
+          <input
+            type="text"
+            name="shipping_address"
+            value={editForm.shipping_address}
+            onChange={handleEditChange}
+            className="border rounded px-2 py-1 ml-2"
+          />
+        ) : (
+          order.shipping_address
+        )}
       </div>
-
-      <div className="bg-orange-50 border border-orange-200 rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-orange-800 mb-2">
-          Driver Dashboard
-        </h2>
-        <p className="text-orange-700">
-          This is your driver dashboard. Here you can manage your deliveries,
-          routes, and track your progress.
-        </p>
+      <div className="mb-2">
+        <span className="font-semibold">Total Amount:</span> ${order.total_amount}
+      </div>
+      <div className="mb-2">
+        <span className="font-semibold">Created At:</span> {new Date(order.created_at).toLocaleString()}
+      </div>
+      <div className="mb-2">
+        <span className="font-semibold">Priority:</span> {order.priority}
+      </div>
+      <div className="flex space-x-2 mt-2">
+        {editId === order.id ? (
+          <>
+            <select
+              name="status"
+              value={editForm.status}
+              onChange={handleEditChange}
+              className="border rounded px-2 py-1"
+            >
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="processing">Processing</option>
+              <option value="shipped">Shipped</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <button
+              onClick={() => handleEditSave(order.id)}
+              className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+              disabled={updateOrder.isPending}
+            >
+              Save
+            </button>
+            <button
+              onClick={() => setEditId(null)}
+              className="bg-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-400"
+            >
+              Cancel
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={() => handleEdit(order)}
+              className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+            >
+              Edit
+            </button>
+            <button
+              onClick={() => handleDelete(order.id)}
+              className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+              disabled={deleteOrder.isPending}
+            >
+              Delete
+            </button>
+          </>
+        )}
       </div>
     </div>
-  )
+  );
+
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Driver Dashboard</h1>
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-2">Orders To Deliver</h2>
+        {toDeliver.length === 0 ? <div className="text-gray-500">No orders to deliver.</div> : toDeliver.map(renderOrderCard)}
+      </div>
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-2">Delivered Orders</h2>
+        {delivered.length === 0 ? <div className="text-gray-500">No delivered orders.</div> : delivered.map(renderOrderCard)}
+      </div>
+      <div>
+        <h2 className="text-xl font-semibold mb-2">All Orders</h2>
+        {existing.length === 0 ? <div className="text-gray-500">No orders found.</div> : existing.map(renderOrderCard)}
+      </div>
+    </div>
+  );
 }
+    
+   

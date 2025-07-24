@@ -34,11 +34,9 @@ function ProductsPage() {
   // Debug: Log products data to inspect image property
   console.log('Fetched products:', products)
 
-  // Function to get page title based on user role
-  // (Optional: you can keep this or hardcode 'Products')
-  // const getPageTitle = () => 'Products';
 
-  const { addToCart, items, removeFromCart, clearCart, decrementFromCart } = useCartStore()
+
+  const { addToCart, items} = useCartStore()
   const [cartIconClicked, setCartIconClicked] = useState<
     Record<string | number, boolean>
   >({})
@@ -91,8 +89,7 @@ function ProductsPage() {
     productId: string | number,
     isLiked: boolean,
   ) => {
-    // Example: await fetch(`/api/products/${productId}/like`, { method: isLiked ? 'POST' : 'DELETE' });
-    // For now, just log
+  
     console.log(`Syncing like for product ${productId}: ${isLiked}`)
   }
 
@@ -106,10 +103,10 @@ function ProductsPage() {
   }) || []
 
   // For sidebar width, compute a class based on items.length
-  const getSidebarWidth = () => {
-    // Only use w-64 and max-w-xs for a slim, card-like sidebar
-    return 'w-64 max-w-xs';
-  };
+  // const getSidebarWidth = () => {
+  //   // Only use w-64 and max-w-xs for a slim, card-like sidebar
+  //   return 'w-64 max-w-xs';
+  // };
 
   if (isLoading) {
     return <div>Loading products...</div>
@@ -207,7 +204,7 @@ function ProductsPage() {
       </header>
       {/* Content Area */}
       <main
-        className="flex-1 overflow-y-auto p-6 bg-gray-50 transition-all duration-300"
+        className="flex-1 overflow-y-auto p-6 bg-gray-50 -all duration-300 hide-scrollbar"
       >
         {/* Products Grid with animation */}
         <AnimatePresence>

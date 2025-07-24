@@ -4,7 +4,7 @@ import { useUpdateUser } from '@/hooks/useUser'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Mail, Phone, MapPin, User as UserIcon, Edit } from 'lucide-react'
-import { DriverLayout } from '@/components/drivers/DriverLayout'
+// import { DriverLayout } from '@/components/drivers/DriverLayout'
 import { motion } from 'framer-motion'
 
 export const Route = createFileRoute('/driver/profile')({

@@ -52,8 +52,8 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
 
 // Utility function to check if user is authenticated and verified
 export function isUserVerified(user: any): boolean {
-  // TODO: Implement actual verification logic
-  return !!user && user.verified === true;
+  // Allow access if user exists and has role 'driver'
+  return !!user && user.role === 'driver';
 }
 
 // Utility function to get user data from auth store

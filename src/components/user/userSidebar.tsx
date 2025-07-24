@@ -216,13 +216,7 @@ export const UserSidebar = () => {
           </ul>
         </nav>
 
-        {/* Add New Button
-        <div className="px-4 pb-4">
-          <button className="w-full flex items-center justify-center space-x-2 bg-orange-400 hover:bg-orange-400 text-white py-2 px-4 rounded-lg transition-colors">
-            <Plus size={18} />
-            {!collapsed && <span>Add New</span>}
-          </button>
-        </div> */}
+   
 
         {/* User & Help Section */}
         <div className="border-t border-gray-200 p-4">

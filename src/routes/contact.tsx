@@ -1,113 +1,186 @@
 import { createFileRoute } from '@tanstack/react-router'
-import {
-  FaMapMarkerAlt,
-  FaEnvelope,
-  FaPhone,
-  FaGlobe,
-  FaFacebookF,
-  FaTwitter,
-  FaInstagram,
-  FaLinkedinIn,
-} from 'react-icons/fa'
+import { useState } from 'react'
 
 export const Route = createFileRoute('/contact')({
   component: RouteComponent,
 })
 
 function RouteComponent() {
+  const [form, setForm] = useState({ name: '', email: '', message: '' })
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>(
+    'idle',
+  )
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    setForm({ ...form, [e.target.name]: e.target.value })
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setStatus('sending')
+    try {
+      const res = await fetch(
+        'http://localhost:8000/api/v1/nodemailer/contact',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        },
+      )
+      if (res.ok) {
+        setStatus('sent')
+        setForm({ name: '', email: '', message: '' })
+      } else {
+        setStatus('error')
+      }
+    } catch {
+      setStatus('error')
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-green-50 py-10 px-4 md:px-20 text-gray-900 flex flex-col">
-      {/* Top Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-10">
-        {[
-          { icon: <FaMapMarkerAlt />, title: 'Address', value: '123 Street, Nairobi, Kenya' },
-          { icon: <FaEnvelope />, title: 'Mail Us', value: 'info@olivegroceries.com' },
-          { icon: <FaPhone />, title: 'Telephone', value: '+254712345678' },
-          { icon: <FaGlobe />, title: 'Website', value: 'www.olivegroceries.com' },
-        ].map((item, index) => (
-          <div key={index} className="bg-white p-6 rounded-xl text-center shadow-lg border border-orange-100">
-            <div className="w-16 h-16 mx-auto mb-4 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-2xl shadow">
-              {item.icon}
-            </div>
-            <h3 className="font-semibold text-lg text-orange-700">{item.title}</h3>
-            <p className="text-sm mt-1 text-gray-600">{item.value}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        {/* Contact Form */}
-        <div className="bg-white/90 text-gray-900 p-8 rounded-2xl lg:col-span-2 shadow-xl border border-orange-100">
-          <h2 className="text-2xl font-bold mb-6 text-orange-600">Send Your Message</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <input className="p-3 rounded-lg border border-gray-200 bg-orange-50 focus:ring-2 focus:ring-orange-400" placeholder="Your Name" />
-            <input className="p-3 rounded-lg border border-gray-200 bg-orange-50 focus:ring-2 focus:ring-orange-400" placeholder="Your Email" />
-            <input className="p-3 rounded-lg border border-gray-200 bg-orange-50 focus:ring-2 focus:ring-orange-400" placeholder="Your Phone" />
-            <input className="p-3 rounded-lg border border-gray-200 bg-orange-50 focus:ring-2 focus:ring-orange-400 col-span-2" placeholder="Subject" />
-            <textarea
-              className="p-3 rounded-lg border border-gray-200 bg-orange-50 focus:ring-2 focus:ring-orange-400 col-span-2"
-              rows={4}
-              placeholder="Message"
-            ></textarea>
-            <button className="bg-orange-500 text-white px-8 py-3 rounded-lg mt-2 hover:bg-orange-600 col-span-2 w-fit font-semibold shadow transition">
-              Send Message
-            </button>
-          </div>
-        </div>
-
-        {/* Side Column */}
-        <div className="space-y-8">
-          {/* Social Icons */}
-          <div className="flex flex-row lg:flex-col items-center lg:items-start space-x-4 lg:space-x-0 lg:space-y-4 mb-6">
-            {[
-              { Icon: FaFacebookF, color: 'bg-blue-600' },
-              { Icon: FaTwitter, color: 'bg-blue-400' },
-              { Icon: FaInstagram, color: 'bg-pink-500' },
-              { Icon: FaLinkedinIn, color: 'bg-blue-700' },
-            ].map(({ Icon, color }, i) => (
-              <div
-                key={i}
-                className={`w-10 h-10 rounded-full ${color} text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform`}
+    <div className="max-w-7xl mx-auto p-6 min-h-screen flex items-center justify-center">
+      <div className="grid md:grid-cols-2 gap-8 w-full">
+        {/* Contact Form Section - Now Larger */}
+        <div className="bg-white p-8 rounded-lg shadow-xl w-full">
+          <h2 className="text-3xl font-bold mb-6 text-orange-400">
+            Contact Us
+          </h2>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label
+                htmlFor="name"
+                className="block text-lg font-medium text-gray-700 mb-2"
               >
-                <Icon />
+                Your Name
+              </label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                value={form.name}
+                onChange={handleChange}
+                required
+                className="w-full p-3 text-lg border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-lg font-medium text-gray-700 mb-2"
+              >
+                Your Email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={handleChange}
+                required
+                className="w-full p-3 text-lg border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="message"
+                className="block text-lg font-medium text-gray-700 mb-2"
+              >
+                Your Message
+              </label>
+              <textarea
+                id="message"
+                name="message"
+                rows={6}
+                value={form.message}
+                onChange={handleChange}
+                required
+                className="w-full p-3 text-lg border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-orange-400 hover:bg-orange-500 text-white px-6 py-3 rounded-lg transition duration-200 text-lg font-semibold"
+              disabled={status === 'sending'}
+            >
+              {status === 'sending' ? 'Sending...' : 'Send Message'}
+            </button>
+            {status === 'sent' && (
+              <div className="text-orange-500 mt-4 text-center text-lg">
+                Message sent successfully!
               </div>
-            ))}
+            )}
+            {status === 'error' && (
+              <div className="text-red-600 mt-4 text-center text-lg">
+                Failed to send. Please try again.
+              </div>
+            )}
+          </form>
+        </div>
+
+        {/* Contact Information Section - Now Larger */}
+        <div className="bg-orange-50 p-8 rounded-lg shadow-xl w-full">
+          <h3 className="text-3xl font-bold mb-6 text-orange-500">
+            Our Information
+          </h3>
+
+          <div className="mb-8">
+            <h4 className="font-bold text-2xl text-orange-500 mb-4">
+              Location
+            </h4>
+            <p className="text-xl font-semibold mb-2">
+              Olive Groceries - Fresh Market{' '}
+              <span className="text-orange-500"># New Open</span>
+            </p>
+            <p className="text-lg">4th Street Plaza</p>
+            <p className="text-lg">2nd floor (parking available)</p>
+            <p className="text-lg mt-4">Mon-Sun: 8AM-9PM</p>
           </div>
 
-          {/* Branch Cards */}
-          {[
-            {
-              name: 'Our Branch - Nairobi',
-              address: '123 Street, Nairobi, Kenya',
-              phone: '+254712345678',
-            },
-            {
-              name: 'Our Branch - Mombasa',
-              address: '456 Avenue, Mombasa, Kenya',
-              phone: '+254798765432',
-            },
-          ].map((branch, i) => (
-            <div key={i} className="bg-white p-5 rounded-xl shadow-lg border border-green-100">
-              <h4 className="font-semibold text-lg mb-2 text-green-700">{branch.name}</h4>
-              <p className="text-sm mb-1">
-                <span className="font-bold text-orange-500">Address:</span>{' '}
-                <span className="ml-1 text-gray-700">{branch.address}</span>
-              </p>
-              <p className="text-sm">
-                <span className="font-bold text-orange-500">Telephone:</span>{' '}
-                <span className="ml-1 text-gray-700">{branch.phone}</span>
-              </p>
+          <div className="mb-8">
+            <h4 className="font-bold text-2xl text-orange-500 mb-4">
+              Contact Details
+            </h4>
+            <ul className="space-y-4 text-lg">
+              <li className="flex items-start">
+                <span className="font-semibold mr-3">Email:</span>
+                <span>info@olivegroceries.com</span>
+              </li>
+              <li className="flex items-start">
+                <span className="font-semibold mr-3">Phone:</span>
+                <span>+254712345678</span>
+              </li>
+              <li className="flex items-start">
+                <span className="font-semibold mr-3">Address:</span>
+                <span>123 Street, Nairobi, Kenya</span>
+              </li>
+            </ul>
+          </div>
+
+          <div className="pt-6 border-t-2 border-orange-200">
+            <h4 className="font-bold text-2xl text-orange-500 mb-4">
+              Stay Connected
+            </h4>
+            <p className="text-lg mb-4">
+              Follow us on social media for updates and special offers
+            </p>
+            <div className="flex space-x-6">
+              {/* Social media icons would go here */}
+              <div className="w-12 h-12 bg-orange-300 rounded-full flex items-center justify-center">
+                <span className="text-white text-xl">f</span>
+              </div>
+              <div className="w-12 h-12 bg-orange-300 rounded-full flex items-center justify-center">
+                <span className="text-white text-xl">t</span>
+              </div>
+              <div className="w-12 h-12 bg-orange-300 rounded-full flex items-center justify-center">
+                <span className="text-white text-xl">i</span>
+              </div>
             </div>
-          ))}
+          </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="text-center py-8 text-gray-500 text-sm mt-16">
-        <p className="italic mb-1">Safe and Efficient Way to get your Groceries</p>
-        <p>Info@Olivegroceries.com</p>
-        <p>+254712345678</p>
-      </footer>
     </div>
   )
 }

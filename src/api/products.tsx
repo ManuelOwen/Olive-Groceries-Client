@@ -86,7 +86,7 @@ export const getAllProducts = async (): Promise<TProduct[]> => {
     const data = await response.json()
     console.log('API response data:', data)
 
-    // Handle the API response format: { success: true, message: "...", data: [...] }
+    // Handle the API response format
     if (data && data.success && Array.isArray(data.data)) {
       console.log(
         '✅ Successfully fetched products from API:',
@@ -101,7 +101,7 @@ export const getAllProducts = async (): Promise<TProduct[]> => {
       )
       return data
     } else if (data && Array.isArray(data.products)) {
-      // { products: [...] } format
+
       console.log(
         '✅ Successfully fetched products from API (products array):',
         data.products.length,
