@@ -21,6 +21,12 @@ const PaystackPaymentPage: React.FC = () => {
   }, [])
 
   const handlePaymentSuccess = async (transaction: any) => {
+    // Check if user is authenticated
+    if (!user || !user.id || !user.email) {
+      alert('You must be logged in to place an order.');
+      window.location.href = '/login'; // Redirect to login page
+      return;
+    }
     // Prepare order data
     const orderData = {
       user_id: user?.id,
@@ -50,8 +56,14 @@ const PaystackPaymentPage: React.FC = () => {
       clearCart()
       alert('Payment complete! Reference: ' + transaction.reference + '\nOrder confirmed, payment recorded, and cart cleared.')
       // Optionally, redirect or show a success page here
-    } catch (err) {
-      alert('Order created, but payment record failed. Please contact support.')
+    } catch (err: any) {
+      // Check for 403 Forbidden error
+      if (err?.message?.includes('403') || err?.message?.toLowerCase().includes('forbidden')) {
+        alert('You are not authorized to create an order. Please log in again.');
+        window.location.href = '/login'; // Redirect to login page
+      } else {
+        alert('Order created, but payment record failed. Please contact support.');
+      }
     }
   }
 

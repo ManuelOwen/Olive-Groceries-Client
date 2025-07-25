@@ -189,7 +189,7 @@ function AdminOrdersComponent() {
     const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'KSH',
     }).format(numAmount)
   }
 
@@ -219,7 +219,7 @@ function AdminOrdersComponent() {
     try {
       // Only send allowed fields for update
       const allowedFields = [
-        // 'order_number', // Removed to prevent sending in update payload
+        // 'order_number', 
         'total_amount',
         'status',
         'priority',
@@ -234,7 +234,7 @@ function AdminOrdersComponent() {
           allowedFields.includes(key),
         ),
       )
-      // Extra safety: Remove forbidden fields again
+      // Extra safety: Remove forbidden fields 
       delete updatePayload.shipped_at
       delete updatePayload.delivered_at
       console.log('Update payload being sent:', updatePayload) // Debug log
