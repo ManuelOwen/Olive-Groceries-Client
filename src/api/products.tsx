@@ -1,6 +1,6 @@
 import { authenticatedFetch } from '@/lib/utils'
 
-const url = '/api/v1'
+const url = 'https://groceries-api-m1sq.onrender.com/api/v1'
 
 // Product interfaces
 export interface TProduct {
