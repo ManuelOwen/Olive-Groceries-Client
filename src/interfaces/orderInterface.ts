@@ -1,4 +1,4 @@
-import { assignDeliveryToDriver } from '../api/deliveries';
+
 export enum OrderStatus {
     PENDING = 'pending',
     CONFIRMED = 'confirmed',

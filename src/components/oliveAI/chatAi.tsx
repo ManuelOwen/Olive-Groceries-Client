@@ -1,11 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { toast } from 'sonner';
-import { useCartStore } from '@/stores/cartStore';
-import { useNavigate } from '@tanstack/react-router';
-import { getAllProducts } from '@/api/products';
-import type { TProduct } from '@/api/products';
-import ReactMarkdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
+import React, { useState, useRef, useEffect } from 'react'
+import { toast } from 'sonner'
+import { useCartStore } from '@/stores/cartStore'
+import { useNavigate } from '@tanstack/react-router'
+import { getAllProducts } from '@/api/products'
+import type { TProduct } from '@/api/products'
+import ReactMarkdown from 'react-markdown'
+import rehypeRaw from 'rehype-raw'
 
 // Simple placeholder for knowledge base search
 const useKnowledgeBase = () => {
@@ -13,40 +13,46 @@ const useKnowledgeBase = () => {
     search: (_query: string) => '',
     isLoaded: true,
     error: null,
-  };
-};
+  }
+}
 
 interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-  kbContent?: string;
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: Date
+  kbContent?: string
 }
 
 const ChatInterface: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [products, setProducts] = useState<TProduct[]>([]);
-  const { addToCart } = useCartStore();
-  const navigate = useNavigate();
-  const { search } = useKnowledgeBase();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = useState(false)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [input, setInput] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [products, setProducts] = useState<TProduct[]>([])
+  const { addToCart } = useCartStore()
+  const navigate = useNavigate()
+  const { search } = useKnowledgeBase()
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    getAllProducts().then(setProducts).catch(() => {});
-  }, []);
+    getAllProducts()
+      .then(setProducts)
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
 
   // AI logic: parse user input for actions
   const handleAIAction = async (userInput: string) => {
     // Procedure for ordering items
-    if (/how (do i|to) order|order items|place an order|buy from olive groceries|order from olive groceries/i.test(userInput)) {
+    if (
+      /how (do i|to) order|order items|place an order|buy from olive groceries|order from olive groceries/i.test(
+        userInput,
+      )
+    ) {
       return (
         `Here's how to order items using Olive Groceries:\n\n` +
         `1. **Browse Products:** Go to the Products page to view available items.\n` +
@@ -57,26 +63,26 @@ const ChatInterface: React.FC = () => {
         `6. **Make Payment:** Complete your order by paying securely on the payment page.\n` +
         `7. **Order Confirmation:** You will receive a confirmation and can track your order status.\n\n` +
         `If you need help at any step, just ask me!`
-      );
+      )
     }
     // Add to cart: "add [product name] to cart"
-    const addMatch = userInput.match(/add (.+) to cart/i);
+    const addMatch = userInput.match(/add (.+) to cart/i)
     if (addMatch) {
-      const name = addMatch[1].toLowerCase();
-      const product = products.find(
-        (p) => p.product_name.toLowerCase().includes(name)
-      );
+      const name = addMatch[1].toLowerCase()
+      const product = products.find((p) =>
+        p.product_name.toLowerCase().includes(name),
+      )
       if (product) {
         addToCart({
           id: product.id,
           product_name: product.product_name,
           price: product.price,
           imageUrl: product.imageUrl || product.image,
-        });
-        toast.success(`${product.product_name} added to cart!`);
-        return `I have added **${product.product_name}** to your cart.`;
+        })
+        toast.success(`${product.product_name} added to cart!`)
+        return `I have added **${product.product_name}** to your cart.`
       } else {
-        return `Sorry, I couldn't find a product named "${name}".`;
+        return `Sorry, I couldn't find a product named "${name}".`
       }
     }
     // Navigation to any main page
@@ -89,87 +95,90 @@ const ChatInterface: React.FC = () => {
       login: '/login',
       contact: '/contact',
       about: '/about',
-      
-    };
-    const navMatch = userInput.match(/(?:go to|open|show me|take me to) ([\w- ]+)/i);
+    }
+    const navMatch = userInput.match(
+      /(?:go to|open|show me|take me to) ([\w- ]+)/i,
+    )
     if (navMatch) {
-      const page = navMatch[1].trim().toLowerCase();
-      const route = pageRoutes[page];
+      const page = navMatch[1].trim().toLowerCase()
+      const route = pageRoutes[page]
       if (route) {
-        navigate({ to: route });
-        return `Navigating you to the **${page}** page.`;
+        navigate({ to: route })
+        return `Navigating you to the **${page}** page.`
       } else {
-        return `Sorry, I couldn't find a page called "${page}".`;
+        return `Sorry, I couldn't find a page called "${page}".`
       }
     }
     // Check product availability: "do you have [product]", "is [product] available", "can I buy [product]"
-    const availabilityMatch = userInput.match(/(?:do you have|is|can I buy)\s+([\w\s-]+)\??/i);
+    const availabilityMatch = userInput.match(
+      /(?:do you have|is|can I buy)\s+([\w\s-]+)\??/i,
+    )
     if (availabilityMatch) {
-      const name = availabilityMatch[1].toLowerCase().trim();
-      const product = products.find(
-        (p) => p.product_name.toLowerCase().includes(name)
-      );
+      const name = availabilityMatch[1].toLowerCase().trim()
+      const product = products.find((p) =>
+        p.product_name.toLowerCase().includes(name),
+      )
       if (product) {
         if (product.quantity && product.quantity > 0) {
-          return `Yes, we have **${product.product_name}** in stock!`;
+          return `Yes, we have **${product.product_name}** in stock!`
         } else {
-          return `Sorry, **${product.product_name}** is currently out of stock.`;
+          return `Sorry, **${product.product_name}** is currently out of stock.`
         }
       } else {
-        return `Sorry, we do not have "${name}" in our store right now.`;
+        return `Sorry, we do not have "${name}" in our store right now.`
       }
     }
     // Go to locations: "choose pick up station" or "go to locations"
     if (/pick\s*up station|go to locations?/i.test(userInput)) {
-      navigate({ to: '/locations/locations' });
-      return `Redirecting you to the pick-up station selection page.`;
+      navigate({ to: '/locations/locations' })
+      return `Redirecting you to the pick-up station selection page.`
     }
     // Go to payment: "checkout" or "go to payment"
     if (/checkout|go to payment|pay now/i.test(userInput)) {
-      navigate({ to: '/payment/paystack' });
-      return `Taking you to the payment page.`;
+      navigate({ to: '/payment/paystack' })
+      return `Taking you to the payment page.`
     }
     // Fallback: echo or use knowledge base
-    const kbContent = search(userInput);
+    const kbContent = search(userInput)
     if (kbContent) {
-      return `Here's what I found: ${kbContent}`;
+      return `Here's what I found: ${kbContent}`
     }
-    return `I'm here to help! You can ask me to add products to your cart, check if a product is available, navigate to any page, choose a pick-up station, or proceed to payment.`;
-  };
+    return `I'm here to help! You can ask me to add products to your cart, check if a product is available, navigate to any page, choose a pick-up station, or proceed to payment.`
+  }
 
   const sendMessage = async () => {
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading) return
     const userMessage: Message = {
       id: `msg_${Date.now()}`,
       role: 'user',
       content: input,
       timestamp: new Date(),
-    };
-    setMessages((prev) => [...prev, userMessage]);
-    setInput('');
-    setIsLoading(true);
+    }
+    setMessages((prev) => [...prev, userMessage])
+    setInput('')
+    setIsLoading(true)
     try {
-      const aiContent = await handleAIAction(input);
+      const aiContent = await handleAIAction(input)
       const assistantMessage: Message = {
         id: `msg_${Date.now()}_assistant`,
         role: 'assistant',
         content: aiContent,
         timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
+      }
+      setMessages((prev) => [...prev, assistantMessage])
     } catch (e) {
-      toast.error('AI error.');
+      toast.error('AI error.')
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
+      e.preventDefault()
+      sendMessage()
     }
-  };
+  }
 
   // THEME: orange/green/white, rounded, shadow, soft UI
   return (
@@ -210,12 +219,21 @@ const ChatInterface: React.FC = () => {
               </button>
             </div>
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-6 py-4 bg-green-50" style={{ minHeight: 300 }}>
+            <div
+              className="flex-1 overflow-y-auto px-6 py-4 bg-green-50"
+              style={{ minHeight: 300 }}
+            >
               {messages.length === 0 && (
                 <div className="text-center text-gray-500 py-8">
                   <span className="text-4xl">👋</span>
-                  <p className="mt-2">Hi! I can help you shop, add items to your cart, and guide you through checkout.</p>
-                  <p className="text-sm mt-2">Try: <span className="italic">Add apples to cart</span> or <span className="italic">Go to checkout</span></p>
+                  <p className="mt-2">
+                    Hi! I can help you shop, add items to your cart, and guide
+                    you through checkout.
+                  </p>
+                  <p className="text-sm mt-2">
+                    Try: <span className="italic">Add apples to cart</span> or{' '}
+                    <span className="italic">Go to checkout</span>
+                  </p>
                 </div>
               )}
               {messages.map((message) => (
@@ -230,7 +248,9 @@ const ChatInterface: React.FC = () => {
                         : 'bg-white text-left text-green-900 border border-green-200'
                     }`}
                   >
-                    <ReactMarkdown rehypePlugins={[rehypeRaw]}>{message.content}</ReactMarkdown>
+                    <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                      {message.content}
+                    </ReactMarkdown>
                     <div className="text-xs text-gray-400 mt-1 text-right">
                       {message.timestamp.toLocaleTimeString()}
                     </div>
@@ -278,7 +298,7 @@ const ChatInterface: React.FC = () => {
         </div>
       )}
     </>
-  );
-};
+  )
+}
 
-export default ChatInterface;
+export default ChatInterface
