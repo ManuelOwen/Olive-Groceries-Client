@@ -3,7 +3,7 @@ import { authenticatedFetch } from '@/lib/utils'
 import { getToken } from '@/stores/authStore'
 
 
-const url = '/api/v1'
+const url = 'https://groceries-api-m1sq.onrender.com/api/v1'
 
 // helper functions
 const handleResponseApi = async (response: Response) => {

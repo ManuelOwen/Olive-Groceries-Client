@@ -15,20 +15,20 @@ export interface OrderConfirmationEmailData {
 }
 
 export const sendOrderConfirmationEmail = async (emailData: OrderConfirmationEmailData) => {
-  const response = await authenticatedFetch('/api/v1/email/order-confirmation', {
+  const response = await authenticatedFetch('https://groceries-api-m1sq.onrender.com/api/v1/email/order-confirmation', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-    },
+    'Content-Type': 'application/json',
+  },
     body: JSON.stringify(emailData),
   })
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
-    throw new Error(errorData.message || 'Failed to send order confirmation email')
-  }
+if (!response.ok) {
+  const errorData = await response.json().catch(() => ({}))
+  throw new Error(errorData.message || 'Failed to send order confirmation email')
+}
 
-  return response.json()
+return response.json()
 }
 
 export const sendPaymentConfirmationEmail = async (emailData: {
@@ -39,18 +39,18 @@ export const sendPaymentConfirmationEmail = async (emailData: {
   totalAmount: number
   estimatedDeliveryTime: string
 }) => {
-  const response = await authenticatedFetch('/api/v1/email/payment-confirmation', {
+  const response = await authenticatedFetch('https://groceries-api-m1sq.onrender.com/api/v1/email/payment-confirmation', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-    },
+    'Content-Type': 'application/json',
+  },
     body: JSON.stringify(emailData),
   })
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
-    throw new Error(errorData.message || 'Failed to send payment confirmation email')
-  }
+if (!response.ok) {
+  const errorData = await response.json().catch(() => ({}))
+  throw new Error(errorData.message || 'Failed to send payment confirmation email')
+}
 
-  return response.json()
+return response.json()
 } 

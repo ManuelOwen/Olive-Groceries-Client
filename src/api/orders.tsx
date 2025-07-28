@@ -3,7 +3,7 @@ import { authenticatedFetch, getAuthHeaders } from '@/lib/utils'
 import { getUserData } from '@/lib/utils'
 import { getToken } from '@/stores/authStore'
 
-const url = '/api/v1'
+const url = 'https://groceries-api-m1sq.onrender.com/api/v1'
 export const getOrdersByUserId = async (
   userId: number | string,
 ): Promise<TOrders[]> => {
@@ -291,7 +291,7 @@ export const getOrdersByPriority = async (
 
 // Fetch deliveries assigned to a driver
 export const getDeliveriesByDriverId = async (user_id: number | string) => {
-  const response = await authenticatedFetch(`/api/v1/orders/user/${user_id}`)
+  const response = await authenticatedFetch(`'https://groceries-api-m1sq.onrender.com/api/v1'/orders/user/${user_id}`)
   if (!response.ok) {
     throw new Error('Failed to fetch deliveries')
   }

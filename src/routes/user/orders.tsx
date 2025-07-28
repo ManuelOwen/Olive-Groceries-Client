@@ -33,18 +33,24 @@ function RouteComponent() {
   // Fetch driver info when selectedOrder changes and has assigned_driver_id
   useEffect(() => {
     if (selectedOrder && selectedOrder.assigned_driver_id) {
+      console.log('Fetching driver info for driver ID:', selectedOrder.assigned_driver_id, 'order ID:', selectedOrder.id)
       // Fallback to API call
       const driverId = selectedOrder.assigned_driver_id
       getDriverForOrder(driverId, selectedOrder.id)
         .then((response) => {
+          console.log('Driver info response:', response)
           if (response.success && response.data) {
             setDriverInfo(response.data)
+          } else if (response && typeof response === 'object') {
+            // Handle case where response might be the driver data directly
+            setDriverInfo(response)
           } else {
+            console.log('No driver data in response')
             setDriverInfo(null)
           }
         })
         .catch((error) => {
-          console.log('Failed to fetch driver info:', error)
+          console.error('Failed to fetch driver info:', error)
           setDriverInfo(null)
         })
     } else {
@@ -95,6 +101,8 @@ function RouteComponent() {
   if (selectedOrder) {
     console.log('Selected order:', selectedOrder)
     console.log('Selected order items:', selectedOrder.items)
+    console.log('Selected order assigned_driver_id:', selectedOrder.assigned_driver_id)
+    console.log('Current driver info state:', driverInfo)
   }
 
   return (
@@ -241,25 +249,33 @@ function RouteComponent() {
                 <h4 className="font-semibold text-orange-600 mb-2">
                   Assigned Driver
                 </h4>
-                {selectedOrder.assigned_driver_id && driverInfo ? (
-                  <>
-                    <div className="text-gray-800">
-                      Name:{' '}
-                      <span className="font-bold">
-                        {driverInfo.fullName || driverInfo.email}
-                      </span>
-                    </div>
-                    <div className="text-gray-800">
-                      Phone:{' '}
-                      <span className="font-bold">
-                        {driverInfo.phoneNumber || 'N/A'}
-                      </span>
-                    </div>
-                    <div className="text-gray-800">
-                      Email:{' '}
-                      <span className="font-bold">{driverInfo.email}</span>
-                    </div>
-                  </>
+                {selectedOrder.assigned_driver_id ? (
+                  driverInfo ? (
+                    <>
+                      <div className="text-gray-800">
+                        Name:{' '}
+                        <span className="font-bold">
+                          {driverInfo.fullName || driverInfo.name || driverInfo.email || 'N/A'}
+                        </span>
+                      </div>
+                      <div className="text-gray-800">
+                        Phone:{' '}
+                        <span className="font-bold">
+                          {driverInfo.phoneNumber || driverInfo.phone || 'N/A'}
+                        </span>
+                      </div>
+                      <div className="text-gray-800">
+                        Email:{' '}
+                        <span className="font-bold">{driverInfo.email || 'N/A'}</span>
+                      </div>
+                      {/* Debug info - remove in production */}
+                      <div className="text-xs text-gray-500 mt-2">
+                        Driver ID: {selectedOrder.assigned_driver_id}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-gray-500">Loading driver information...</div>
+                  )
                 ) : (
                   <div className="text-gray-500">No driver assigned yet.</div>
                 )}

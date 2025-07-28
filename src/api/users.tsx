@@ -1,7 +1,7 @@
 import type { TUser, TUserRegister } from '@/hooks/useUser'
 import { authenticatedFetch } from '@/lib/utils'
 
-const url = '/api/v1'
+const url = 'https://groceries-api-m1sq.onrender.com/api/v1'
 
 // Helper functions
 const handleResponseApi = async (response: Response) => {
@@ -105,25 +105,34 @@ export const getAllUsers = async (): Promise<TUser[]> => {
 
 // Get user by user id
 export const getUserById = async (userId: number): Promise<any> => {
-  const response = await authenticatedFetch(`/api/v1/users/${userId}`, {
-    method: 'GET',
-  });
+  const response = await authenticatedFetch(
+    `'https://groceries-api-m1sq.onrender.com/api/v1'/users/${userId}`,
+    {
+      method: 'GET',
+    },
+  )
   if (!response.ok) {
-    throw new Error('Failed to fetch user');
+    throw new Error('Failed to fetch user')
   }
-  return response.json();
-};
+  return response.json()
+}
 
-export const getDriverForOrder = async (driverId: number, orderId: number): Promise<any> => {
-  const response = await authenticatedFetch(`/api/v1/users/driver/${driverId}/for-order/${orderId}`, {
-    method: 'GET',
-  });
+export const getDriverForOrder = async (
+  driverId: number,
+  orderId: number,
+): Promise<any> => {
+  const response = await authenticatedFetch(
+    `${url}/users/driver/${driverId}/for-order/${orderId}`,
+    {
+      method: 'GET',
+    },
+  )
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || 'Failed to fetch driver information');
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(errorData.message || 'Failed to fetch driver information')
   }
-  return response.json();
-};
+  return response.json()
+}
 
 // Create a new user
 export const createUser = async (userData: TUserRegister): Promise<TUser> => {
