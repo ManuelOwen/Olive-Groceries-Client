@@ -22,7 +22,7 @@ function RouteComponent() {
     setStatus('sending')
     try {
       const res = await fetch(
-        'http://localhost:8000/api/v1/nodemailer/contact',
+        'https://groceries-api-m1sq.onrender.com/api/v1/nodemailer/contact',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

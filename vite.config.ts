@@ -9,7 +9,7 @@ import { resolve } from 'path'
 // https://vitejs.dev/config/
 export default defineConfig({
   build: {
-    chunkSizeWarningLimit: 3000, 
+    chunkSizeWarningLimit: 3000,
   },
   plugins: [
     TanStackRouterVite({ autoCodeSplitting: true }),
@@ -19,7 +19,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'https://groceries-api-m1sq.onrender.com',
         changeOrigin: true,
         secure: false,
       },
