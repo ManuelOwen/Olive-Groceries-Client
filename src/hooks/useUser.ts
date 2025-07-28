@@ -24,7 +24,7 @@ export interface TUserRegister {
   phoneNumber: string;
 }
 // Define the type for the user login data
-export interface TUserLogin {
+export interface  TUserLogin {
   email: string;
   password: string;
 }
