@@ -123,6 +123,7 @@ export const isUser = (): boolean => {
 
 export const isDriver = (): boolean => {
   const role = getUserRole()
+  
   return role === 'driver'
 }
 

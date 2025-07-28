@@ -1,6 +1,6 @@
 import { useQuery, useMutation, type UseMutationResult, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import {
-    getAllDeliveries,
+    // getAllDeliveries,
     getAllDeliveriesWithoutAuth,
     getDeliveryById,
     createDelivery,

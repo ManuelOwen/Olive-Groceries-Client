@@ -1,5 +1,6 @@
 import { API_URL } from '@/components/api/url';
 import type { TUser } from '@/hooks/useUser';
+import { useAuthStore } from '@/stores/authStore'
 
 //  helper functions to handle errors
 const handleApiResponse = async (response: Response) => {
@@ -140,8 +141,7 @@ export const loginUser = async (userData: {
     throw new Error(`No authentication token received from server. Response contained: ${Object.keys(data).join(', ')}`);
   }
 
-  // Import the auth store and save the user and token
-  const { useAuthStore } = await import('@/stores/authStore');
+  
   const { login } = useAuthStore.getState();
 
   // Save user and token to the store

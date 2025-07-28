@@ -50,7 +50,7 @@ function RouteComponent() {
   const {
     data: orders = [],
     isLoading: ordersLoading,
-    error: ordersError,
+    
   } = useQuery<TOrders[]>({
     queryKey: ['userOrders', userId],
     queryFn: () => fetchUserOrders(userId as string | number, token as string),
@@ -61,7 +61,7 @@ function RouteComponent() {
   const {
     data: payments = [],
     isLoading: paymentsLoading,
-    error: paymentsError,
+    
   } = useQuery<Payment[]>({
     queryKey: ['userPayments', userId],
     queryFn: () => fetchUserPayments(userId as string | number, token as string),

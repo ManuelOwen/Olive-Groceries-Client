@@ -1,5 +1,7 @@
 import type { TOrders } from '@/interfaces/orderInterface'
-import { authenticatedFetch } from '@/lib/utils'
+import { authenticatedFetch, getAuthHeaders } from '@/lib/utils'
+import { getUserData } from '@/lib/utils'
+import { getToken } from '@/stores/authStore'
 
 const url = '/api/v1'
 export const getOrdersByUserId = async (
@@ -8,7 +10,6 @@ export const getOrdersByUserId = async (
   console.log('[getOrdersByUserId] Fetching orders for user ID:', userId)
 
   // Get current user data to check permissions
-  const { getUserData } = await import('@/lib/utils')
   const currentUser = getUserData()
   console.log('[getOrdersByUserId] Current user:', currentUser)
   console.log(
@@ -49,7 +50,6 @@ export const getOrdersByUserId = async (
 
   try {
     // Debug: Get token from store
-    const { getToken } = await import('@/stores/authStore');
     const token = getToken();
     console.log('[getOrdersByUserId] Token being sent:', token);
     // If you want to see headers, you can also log them:
@@ -204,6 +204,7 @@ export const getOrderById = async (id: number | string): Promise<TOrders> => {
 export const createOrder = async (orderData: TOrders): Promise<TOrders> => {
   const response = await authenticatedFetch(`${url}/orders`, {
     method: 'POST',
+    headers: getAuthHeaders(),
     body: JSON.stringify(orderData),
   })
   await handleResponseApi(response)
@@ -242,7 +243,7 @@ export const updateOrder = async (
   }
 
   //  Get token from store
-  const { getToken } = await import('@/stores/authStore')
+  
   const token = getToken()
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',

@@ -12,7 +12,7 @@ export default function Footer() {
             <div className="grid grid-cols-1 gap-4">
               <div>
                 <p className="font-medium border-b border-green-100 pb-2 mb-2">Stay up to date</p>
-                <p className="text-sm">Owner (email) Addresses</p>
+                <p className="text-sm">info@olivegroceries.com</p>
               </div>
               <div>
                 <p className="font-medium border-b border-green-100 pb-2 mb-2">Weekly Specials</p>
@@ -31,7 +31,7 @@ export default function Footer() {
             <p className="text-sm">4th Street Plaza</p>
             <p className="text-sm">2nd floor (parking available)</p>
             <p className="text-sm">03/07/2023</p>
-            <p className="font-medium mt-2">Contact Us</p>
+            {/* <p className="font-medium mt-2">Contact Us</p> */}
           </div>
 
           {/* Contact Info */}
@@ -47,7 +47,7 @@ export default function Footer() {
 
         {/* Copyright and Note */}
         <div className="pt-4 border-t border-green-100 text-center text-xs text-gray-500">
-          <p className="italic mb-1">A note of selection status</p>
+          <p className="italic mb-1">Olive Groceries, the best for all your grocery needs</p>
           <p>&copy; {new Date().getFullYear()} Olive Groceries - Fresh Market Applications</p>
         </div>
       </div>

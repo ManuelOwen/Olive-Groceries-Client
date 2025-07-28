@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { LayoutWithSidebar } from '@/components/LayoutWithSidebar'
 import { LogoutButton } from '@/components/LogoutButton'
-import { Bell, Search, ShoppingCart, Star, Heart, ChevronDown, X } from 'lucide-react'
+import { Search, ShoppingCart, Star, Heart, ChevronDown } from 'lucide-react'
 import { productService, type TProduct } from '@/hooks/useProducts'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCartStore } from '@/stores/cartStore'

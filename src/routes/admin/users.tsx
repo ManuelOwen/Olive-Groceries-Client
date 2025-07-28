@@ -13,8 +13,7 @@ import {
   Plus,
   Edit,
   Trash2,
-  ChevronLeft,
-  ChevronRight,
+ 
   Search,
   Filter,
   User,
@@ -25,6 +24,8 @@ import {
 import { Toaster, toast } from 'sonner'
 import { LayoutWithSidebar } from '@/components/LayoutWithSidebar'
 import { useAuthStore } from '@/stores/authStore';
+import modalBg from '@/images/bg.jpeg';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const Route = createFileRoute('/admin/users')({
   beforeLoad: () => {
@@ -488,8 +489,14 @@ function AdminUsersComponent() {
 
       {/* Create User Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 z-50 overflow-y-auto h-full w-full" style={{background: `url(${modalBg}) center center / cover no-repeat`}}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+            className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+          >
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 Create New User
@@ -601,14 +608,20 @@ function AdminUsersComponent() {
                 </button>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
 
       {/* Edit User Modal */}
       {showEditModal && selectedUser && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 z-50 overflow-y-auto h-full w-full" style={{background: `url(${modalBg}) center center / cover no-repeat`}}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+            className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+          >
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 Edit User: {selectedUser.fullName}
@@ -702,46 +715,54 @@ function AdminUsersComponent() {
                 </button>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
 
       {/* Delete Confirmation Modal */}
-      {showDeleteModal && selectedUser && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3 text-center">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                <Trash2 className="h-6 w-6 text-red-600" />
+      <AnimatePresence>
+        {showDeleteModal && selectedUser && (
+          <div className="fixed inset-0 z-50 overflow-y-auto h-full w-full" style={{background: `url(${modalBg}) center center / cover no-repeat`}}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+              className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+            >
+              <div className="mt-3 text-center">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                  <Trash2 className="h-6 w-6 text-red-600" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mt-2">
+                  Delete User
+                </h3>
+                <div className="mt-2 px-7 py-3">
+                  <p className="text-sm text-gray-500">
+                    Are you sure you want to delete user "{selectedUser.fullName}
+                    "? This action cannot be undone.
+                  </p>
+                </div>
+                <div className="flex justify-center space-x-3 mt-4">
+                  <button
+                    onClick={() => setShowDeleteModal(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleteUserMutation.isPending}
+                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+                  >
+                    {deleteUserMutation.isPending ? 'Deleting...' : 'Delete'}
+                  </button>
+                </div>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mt-2">
-                Delete User
-              </h3>
-              <div className="mt-2 px-7 py-3">
-                <p className="text-sm text-gray-500">
-                  Are you sure you want to delete user "{selectedUser.fullName}
-                  "? This action cannot be undone.
-                </p>
-              </div>
-              <div className="flex justify-center space-x-3 mt-4">
-                <button
-                  onClick={() => setShowDeleteModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDelete}
-                  disabled={deleteUserMutation.isPending}
-                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
-                >
-                  {deleteUserMutation.isPending ? 'Deleting...' : 'Delete'}
-                </button>
-              </div>
-            </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </LayoutWithSidebar>
   )
 }

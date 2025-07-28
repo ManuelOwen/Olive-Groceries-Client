@@ -23,6 +23,13 @@ import {
 import { Toaster, toast } from 'sonner'
 import { LayoutWithSidebar } from '@/components/LayoutWithSidebar'
 import { useAuthStore } from '@/stores/authStore'
+import modalBg from '@/images/bg.jpeg'
+import { motion, AnimatePresence } from 'framer-motion'
+import { getUsersByRole } from '@/api/users'
+import { useEffect } from 'react'
+import type { TUser } from '@/hooks/useUser'
+
+type TOrderWithDriver = TOrders & { assigned_driver_id?: number }
 
 export const Route = createFileRoute('/admin/orders')({
   beforeLoad: () => {
@@ -52,6 +59,7 @@ function AdminOrdersComponent() {
   const createOrderMutation = useCreateOrder()
   const updateOrderMutation = useUpdateOrder()
   const deleteOrderMutation = useDeleteOrder()
+  const { token } = useAuthStore()
 
   // State for pagination
   const [currentPage, setCurrentPage] = useState(1)
@@ -80,11 +88,57 @@ function AdminOrdersComponent() {
   })
 
   // Add view mode state
-  const [viewMode, setViewMode] = useState<'table' | 'card'>('table');
+  const [viewMode, setViewMode] = useState<'table' | 'card'>('table')
+  const [drivers, setDrivers] = useState<TUser[]>([])
+  const [assigningOrderId, setAssigningOrderId] = useState<number | null>(null)
+  const [assigningDriverId, setAssigningDriverId] = useState<number | null>(
+    null,
+  )
+
+  // Fetch drivers on mount
+  useEffect(() => {
+    getUsersByRole('driver')
+      .then((response) => {
+        const driverList = Array.isArray(response)
+          ? response
+          : (response as any)?.data || []
+        console.log('Fetched drivers:', driverList)
+        setDrivers(driverList || [])
+      })
+      .catch(console.error)
+  }, [])
+
+  // Assign driver handler
+  const handleAssignDriver = async (orderId: number, driverId: number) => {
+    setAssigningOrderId(orderId)
+    setAssigningDriverId(driverId)
+    try {
+      const response = await fetch(`/api/v1/orders/${orderId}/assign-driver`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ driver_id: driverId }),
+      })
+      const data = await response.json()
+      if (data.success) {
+        toast.success('Driver assigned successfully!')
+      } else {
+        toast.error(data.message || 'Failed to assign driver')
+      }
+    } catch (error) {
+      toast.error('Failed to assign driver')
+      console.error('Assign driver error:', error)
+    } finally {
+      setAssigningOrderId(null)
+      setAssigningDriverId(null)
+    }
+  }
 
   // Filter and search orders
   const filteredOrders = Array.isArray(orders)
-    ? orders.filter((order) => {
+    ? (orders as TOrderWithDriver[]).filter((order) => {
         const matchesSearch =
           order.order_number?.toString().includes(searchTerm) ||
           order.shipping_address
@@ -219,7 +273,7 @@ function AdminOrdersComponent() {
     try {
       // Only send allowed fields for update
       const allowedFields = [
-        // 'order_number', 
+        // 'order_number',
         'total_amount',
         'status',
         'priority',
@@ -234,7 +288,7 @@ function AdminOrdersComponent() {
           allowedFields.includes(key),
         ),
       )
-      // Extra safety: Remove forbidden fields 
+      // Extra safety: Remove forbidden fields
       delete updatePayload.shipped_at
       delete updatePayload.delivered_at
       console.log('Update payload being sent:', updatePayload) // Debug log
@@ -331,7 +385,9 @@ function AdminOrdersComponent() {
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Orders Management</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Orders Management
+              </h1>
               <p className="text-gray-600">Manage all customer orders</p>
             </div>
             <div className="flex gap-2">
@@ -411,22 +467,52 @@ function AdminOrdersComponent() {
             <div className="overflow-y-auto max-h-[600px] mt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {currentOrders.map((order) => (
-                  <div key={order.id} className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 flex flex-col justify-between">
+                  <div
+                    key={order.id}
+                    className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 flex flex-col justify-between"
+                  >
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-lg font-bold text-orange-300">#{order.order_number}</span>
+                        <span className="text-lg font-bold text-orange-300">
+                          #{order.order_number}
+                        </span>
                         {getStatusBadge(String(order.status))}
                       </div>
-                      <div className="text-gray-700 mb-1">Customer: <span className="font-semibold">{order.user?.fullName || `User ${order.user_id}`}</span></div>
-                      <div className="text-gray-700 mb-1">Total: <span className="font-semibold">{formatCurrency(order.total_amount)}</span></div>
-                      <div className="text-gray-700 mb-1">Priority: {getPriorityBadge(order.priority)}</div>
-                      <div className="text-gray-700 mb-1">Shipping: <span className="font-semibold">{order.shipping_address}</span></div>
+                      <div className="text-gray-700 mb-1">
+                        Customer:{' '}
+                        <span className="font-semibold">
+                          {order.user?.fullName || `User ${order.user_id}`}
+                        </span>
+                      </div>
+                      <div className="text-gray-700 mb-1">
+                        Total:{' '}
+                        <span className="font-semibold">
+                          {formatCurrency(order.total_amount)}
+                        </span>
+                      </div>
+                      <div className="text-gray-700 mb-1">
+                        Priority: {getPriorityBadge(order.priority)}
+                      </div>
+                      <div className="text-gray-700 mb-1">
+                        Shipping:{' '}
+                        <span className="font-semibold">
+                          {order.shipping_address}
+                        </span>
+                      </div>
                     </div>
                     <div className="flex justify-end gap-2 mt-4">
-                      <button onClick={() => openEditModal(order)} className="text-orange-600 hover:text-orange-900 p-1 rounded" title="Edit">
+                      <button
+                        onClick={() => openEditModal(order)}
+                        className="text-orange-600 hover:text-orange-900 p-1 rounded"
+                        title="Edit"
+                      >
                         <Edit className="h-4 w-4" />
                       </button>
-                      <button onClick={() => openDeleteModal(order)} className="text-red-600 hover:text-red-900 p-1 rounded" title="Delete">
+                      <button
+                        onClick={() => openDeleteModal(order)}
+                        className="text-red-600 hover:text-red-900 p-1 rounded"
+                        title="Delete"
+                      >
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -437,23 +523,29 @@ function AdminOrdersComponent() {
               {totalPages > 1 && (
                 <div className="flex justify-center mt-6">
                   <button
-                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
                     disabled={currentPage === 1}
                     className="px-4 py-2 border border-gray-300 rounded-l-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                   >
                     Previous
                   </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-4 py-2 border-t border-b border-gray-300 bg-white text-gray-700 hover:bg-gray-50 ${currentPage === page ? 'bg-orange-100 text-orange-600 font-bold' : ''}`}
-                    >
-                      {page}
-                    </button>
-                  ))}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-4 py-2 border-t border-b border-gray-300 bg-white text-gray-700 hover:bg-gray-50 ${currentPage === page ? 'bg-orange-100 text-orange-600 font-bold' : ''}`}
+                      >
+                        {page}
+                      </button>
+                    ),
+                  )}
                   <button
-                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
                     disabled={currentPage === totalPages}
                     className="px-4 py-2 border border-gray-300 rounded-r-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                   >
@@ -488,6 +580,9 @@ function AdminOrdersComponent() {
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Shipping Address
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Driver
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
@@ -525,6 +620,39 @@ function AdminOrdersComponent() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {order.shipping_address}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <div className="flex items-center gap-2">
+                            {order.assigned_driver_id ? (
+                              <span className="text-green-700 font-semibold">
+                                {drivers.find(
+                                  (d) => d.id === order.assigned_driver_id,
+                                )?.fullName || 'Assigned'}
+                              </span>
+                            ) : (
+                              <select
+                                value={
+                                  assigningOrderId === order.id
+                                    ? assigningDriverId || ''
+                                    : ''
+                                }
+                                onChange={(e) =>
+                                  handleAssignDriver(
+                                    order.id,
+                                    Number(e.target.value),
+                                  )
+                                }
+                                className="border rounded px-2 py-1"
+                              >
+                                <option value="">Assign Driver</option>
+                                {drivers.map((driver) => (
+                                  <option key={driver.id} value={driver.id}>
+                                    {driver.fullName || driver.email}
+                                  </option>
+                                ))}
+                              </select>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex items-center space-x-2">
@@ -600,21 +728,22 @@ function AdminOrdersComponent() {
                           <ChevronLeft className="h-5 w-5" />
                         </button>
 
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                          (page) => (
-                            <button
-                              key={page}
-                              onClick={() => setCurrentPage(page)}
-                              className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                                currentPage === page
-                                  ? 'z-10 bg-orange-50 border-orange-500 text-orange-600'
-                                  : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                              }`}
-                            >
-                              {page}
-                            </button>
-                          ),
-                        )}
+                        {Array.from(
+                          { length: totalPages },
+                          (_, i) => i + 1,
+                        ).map((page) => (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                              currentPage === page
+                                ? 'z-10 bg-orange-50 border-orange-500 text-orange-600'
+                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        ))}
 
                         <button
                           onClick={() =>
@@ -665,288 +794,332 @@ function AdminOrdersComponent() {
         {/* Continue with modals... */}
 
         {/* Create Order Modal */}
-        {showCreateModal && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-              <div className="mt-3">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Create New Order
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Order Number
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.order_number || ''}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          order_number: e.target.value,
-                        })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
-                      placeholder="Enter order number"
-                    />
+        <AnimatePresence>
+          {showCreateModal && (
+            <div
+              className="fixed inset-0 z-50 overflow-y-auto h-full w-full"
+              style={{
+                background: `url(${modalBg}) center center / cover no-repeat`,
+              }}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+              >
+                <div className="mt-3">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Create New Order
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Order Number
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.order_number || ''}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            order_number: e.target.value,
+                          })
+                        }
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                        placeholder="Enter order number"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Total Amount
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.total_amount || ''}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            total_amount: parseFloat(e.target.value) || 0,
+                          })
+                        }
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                        placeholder="Enter amount (e.g., 99.99)"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Status
+                      </label>
+                      <select
+                        value={formData.status || OrderStatus.PENDING}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            status: e.target.value as OrderStatus,
+                          })
+                        }
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                      >
+                        <option value={OrderStatus.PENDING}>Pending</option>
+                        <option value={OrderStatus.CONFIRMED}>Confirmed</option>
+                        <option value={OrderStatus.PROCESSING}>
+                          Processing
+                        </option>
+                        <option value={OrderStatus.SHIPPED}>Shipped</option>
+                        <option value={OrderStatus.DELIVERED}>Delivered</option>
+                        <option value={OrderStatus.CANCELLED}>Cancelled</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Priority
+                      </label>
+                      <select
+                        value={formData.priority || OrderPriority.Low}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            priority: e.target.value as OrderPriority,
+                          })
+                        }
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                      >
+                        <option value={OrderPriority.Low}>Low</option>
+                        <option value={OrderPriority.Medium}>Medium</option>
+                        <option value={OrderPriority.High}>High</option>
+                        <option value={OrderPriority.Urgent}>Urgent</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        User ID
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.user_id || ''}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            user_id: parseInt(e.target.value) || 0,
+                          })
+                        }
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                        placeholder="Enter user ID"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Shipping Address
+                      </label>
+                      <textarea
+                        value={formData.shipping_address || ''}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            shipping_address: e.target.value,
+                          })
+                        }
+                        rows={3}
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Total Amount
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.total_amount || ''}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          total_amount: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
-                      placeholder="Enter amount (e.g., 99.99)"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Status
-                    </label>
-                    <select
-                      value={formData.status || OrderStatus.PENDING}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          status: e.target.value as OrderStatus,
-                        })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                  <div className="flex justify-end space-x-3 mt-6">
+                    <button
+                      onClick={() => setShowCreateModal(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                     >
-                      <option value={OrderStatus.PENDING}>Pending</option>
-                      <option value={OrderStatus.CONFIRMED}>Confirmed</option>
-                      <option value={OrderStatus.PROCESSING}>Processing</option>
-                      <option value={OrderStatus.SHIPPED}>Shipped</option>
-                      <option value={OrderStatus.DELIVERED}>Delivered</option>
-                      <option value={OrderStatus.CANCELLED}>Cancelled</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Priority
-                    </label>
-                    <select
-                      value={formData.priority || OrderPriority.Low}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          priority: e.target.value as OrderPriority,
-                        })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleCreate}
+                      disabled={createOrderMutation.isPending}
+                      className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
                     >
-                      <option value={OrderPriority.Low}>Low</option>
-                      <option value={OrderPriority.Medium}>Medium</option>
-                      <option value={OrderPriority.High}>High</option>
-                      <option value={OrderPriority.Urgent}>Urgent</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      User ID
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.user_id || ''}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          user_id: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
-                      placeholder="Enter user ID"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Shipping Address
-                    </label>
-                    <textarea
-                      value={formData.shipping_address || ''}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          shipping_address: e.target.value,
-                        })
-                      }
-                      rows={3}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
-                    />
+                      {createOrderMutation.isPending
+                        ? 'Creating...'
+                        : 'Create Order'}
+                    </button>
                   </div>
                 </div>
-                <div className="flex justify-end space-x-3 mt-6">
-                  <button
-                    onClick={() => setShowCreateModal(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleCreate}
-                    disabled={createOrderMutation.isPending}
-                    className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
-                  >
-                    {createOrderMutation.isPending
-                      ? 'Creating...'
-                      : 'Create Order'}
-                  </button>
-                </div>
-              </div>
+              </motion.div>
             </div>
-          </div>
-        )}
+          )}
+        </AnimatePresence>
 
         {/* Edit Order Modal */}
-        {showEditModal && selectedOrder && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-              <div className="mt-3">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Edit Order #{selectedOrder.order_number}
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Total Amount
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={formData.total_amount || ''}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          total_amount: parseFloat(e.target.value),
-                        })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
-                    />
+        <AnimatePresence>
+          {showEditModal && selectedOrder && (
+            <div
+              className="fixed inset-0 z-50 overflow-y-auto h-full w-full"
+              style={{
+                background: `url(${modalBg}) center center / cover no-repeat`,
+              }}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+              >
+                <div className="mt-3">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Edit Order #{selectedOrder.order_number}
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Total Amount
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.total_amount || ''}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            total_amount: parseFloat(e.target.value),
+                          })
+                        }
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Status
+                      </label>
+                      <select
+                        value={formData.status || OrderStatus.PENDING}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            status: e.target.value as OrderStatus,
+                          })
+                        }
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                      >
+                        <option value={OrderStatus.PENDING}>Pending</option>
+                        <option value={OrderStatus.CONFIRMED}>Confirmed</option>
+                        <option value={OrderStatus.PROCESSING}>
+                          Processing
+                        </option>
+                        <option value={OrderStatus.SHIPPED}>Shipped</option>
+                        <option value={OrderStatus.DELIVERED}>Delivered</option>
+                        <option value={OrderStatus.CANCELLED}>Cancelled</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Priority
+                      </label>
+                      <select
+                        value={formData.priority || OrderPriority.Low}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            priority: e.target.value as OrderPriority,
+                          })
+                        }
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                      >
+                        <option value={OrderPriority.Low}>Low</option>
+                        <option value={OrderPriority.Medium}>Medium</option>
+                        <option value={OrderPriority.High}>High</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Shipping Address
+                      </label>
+                      <textarea
+                        value={formData.shipping_address || ''}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            shipping_address: e.target.value,
+                          })
+                        }
+                        rows={3}
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Status
-                    </label>
-                    <select
-                      value={formData.status || OrderStatus.PENDING}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          status: e.target.value as OrderStatus,
-                        })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                  <div className="flex justify-end space-x-3 mt-6">
+                    <button
+                      onClick={() => setShowEditModal(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                     >
-                      <option value={OrderStatus.PENDING}>Pending</option>
-                      <option value={OrderStatus.CONFIRMED}>Confirmed</option>
-                      <option value={OrderStatus.PROCESSING}>Processing</option>
-                      <option value={OrderStatus.SHIPPED}>Shipped</option>
-                      <option value={OrderStatus.DELIVERED}>Delivered</option>
-                      <option value={OrderStatus.CANCELLED}>Cancelled</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Priority
-                    </label>
-                    <select
-                      value={formData.priority || OrderPriority.Low}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          priority: e.target.value as OrderPriority,
-                        })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleUpdate}
+                      disabled={updateOrderMutation.isPending}
+                      className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
                     >
-                      <option value={OrderPriority.Low}>Low</option>
-                      <option value={OrderPriority.Medium}>Medium</option>
-                      <option value={OrderPriority.High}>High</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Shipping Address
-                    </label>
-                    <textarea
-                      value={formData.shipping_address || ''}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          shipping_address: e.target.value,
-                        })
-                      }
-                      rows={3}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
-                    />
+                      {updateOrderMutation.isPending
+                        ? 'Updating...'
+                        : 'Update Order'}
+                    </button>
                   </div>
                 </div>
-                <div className="flex justify-end space-x-3 mt-6">
-                  <button
-                    onClick={() => setShowEditModal(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleUpdate}
-                    disabled={updateOrderMutation.isPending}
-                    className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
-                  >
-                    {updateOrderMutation.isPending
-                      ? 'Updating...'
-                      : 'Update Order'}
-                  </button>
-                </div>
-              </div>
+              </motion.div>
             </div>
-          </div>
-        )}
+          )}
+        </AnimatePresence>
 
         {/* Delete Confirmation Modal */}
-        {showDeleteModal && selectedOrder && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-              <div className="mt-3 text-center">
-                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                  <Trash2 className="h-6 w-6 text-red-600" />
+        <AnimatePresence>
+          {showDeleteModal && selectedOrder && (
+            <div
+              className="fixed inset-0 z-50 overflow-y-auto h-full w-full"
+              style={{
+                background: `url(${modalBg}) center center / cover no-repeat`,
+              }}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+              >
+                <div className="mt-3 text-center">
+                  <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                    <Trash2 className="h-6 w-6 text-red-600" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mt-2">
+                    Delete Order
+                  </h3>
+                  <div className="mt-2 px-7 py-3">
+                    <p className="text-sm text-gray-500">
+                      Are you sure you want to delete order #
+                      {selectedOrder.order_number}? This action cannot be
+                      undone.
+                    </p>
+                  </div>
+                  <div className="flex justify-center space-x-3 mt-4">
+                    <button
+                      onClick={() => setShowDeleteModal(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleDelete}
+                      disabled={deleteOrderMutation.isPending}
+                      className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+                    >
+                      {deleteOrderMutation.isPending ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </div>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mt-2">
-                  Delete Order
-                </h3>
-                <div className="mt-2 px-7 py-3">
-                  <p className="text-sm text-gray-500">
-                    Are you sure you want to delete order #
-                    {selectedOrder.order_number}? This action cannot be undone.
-                  </p>
-                </div>
-                <div className="flex justify-center space-x-3 mt-4">
-                  <button
-                    onClick={() => setShowDeleteModal(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    disabled={deleteOrderMutation.isPending}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
-                  >
-                    {deleteOrderMutation.isPending ? 'Deleting...' : 'Delete'}
-                  </button>
-                </div>
-              </div>
+              </motion.div>
             </div>
-          </div>
-        )}
+          )}
+        </AnimatePresence>
       </>
     </LayoutWithSidebar>
   )

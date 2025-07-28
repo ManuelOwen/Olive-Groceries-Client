@@ -23,6 +23,8 @@ import {
 import { Toaster, toast } from 'sonner'
 import { LayoutWithSidebar } from '@/components/LayoutWithSidebar'
 import { productCategory } from '@/interfaces/orderInterface'
+import modalBg from '@/images/bg.jpeg';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const Route = createFileRoute('/admin/products')({
   beforeLoad: () => {
@@ -639,312 +641,336 @@ function AdminProductsComponent() {
         </div>
 
         {/* Create Product Modal */}
-        {showCreateModal && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-              <div className="mt-3">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Create New Product
-                </h3>
-                <div className="space-y-4">
-                  {/* Product Name, Price, Category, Image, In Stock fields only */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Product Name
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.product_name || ''}
-                      required
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          product_name: e.target.value,
-                        })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
-                      placeholder="Enter product name"
-                    />
+        <AnimatePresence>
+          {showCreateModal && (
+            <div className="fixed inset-0 z-50 overflow-y-auto h-full w-full" style={{background: `url(${modalBg}) center center / cover no-repeat`}}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+              >
+                <div className="mt-3">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Create New Product
+                  </h3>
+                  <div className="space-y-4">
+                    {/* Product Name, Price, Category, Image, In Stock fields only */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Product Name
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.product_name || ''}
+                        required
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            product_name: e.target.value,
+                          })
+                        }
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                        placeholder="Enter product name"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Price
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.price ?? ''}
+                        required
+                        onChange={(e) => {
+                          const value = e.target.value
+                          setFormData({
+                            ...formData,
+                            price: value === '' ? undefined : parseFloat(value),
+                          })
+                        }}
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                        placeholder="Enter price"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Quantity
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={formData.quantity ?? ''}
+                        required
+                        onChange={(e) => {
+                          const value = e.target.value
+                          setFormData({
+                            ...formData,
+                            quantity: value === '' ? undefined : parseInt(value, 10),
+                          })
+                        }}
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                        placeholder="Enter quantity"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Category
+                      </label>
+                      <select
+                        value={formData.category || ''}
+                        onChange={(e) =>
+                          setFormData({ ...formData, category: e.target.value })
+                        }
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                      >
+                        <option value="">Select category</option>
+                        {Object.values(productCategory).map((cat) => (
+                          <option key={cat} value={cat}>
+                            {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Product Image
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) setImageFile(file)
+                        }}
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                      />
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={formData.inStock || false}
+                        onChange={(e) =>
+                          setFormData({ ...formData, inStock: e.target.checked })
+                        }
+                        className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                      />
+                      <label className="ml-2 block text-sm text-gray-900">
+                        In Stock
+                      </label>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Price
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={formData.price ?? ''}
-                      required
-                      onChange={(e) => {
-                        const value = e.target.value
-                        setFormData({
-                          ...formData,
-                          price: value === '' ? undefined : parseFloat(value),
-                        })
-                      }}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
-                      placeholder="Enter price"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Quantity
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      value={formData.quantity ?? ''}
-                      required
-                      onChange={(e) => {
-                        const value = e.target.value
-                        setFormData({
-                          ...formData,
-                          quantity: value === '' ? undefined : parseInt(value, 10),
-                        })
-                      }}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
-                      placeholder="Enter quantity"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Category
-                    </label>
-                    <select
-                      value={formData.category || ''}
-                      onChange={(e) =>
-                        setFormData({ ...formData, category: e.target.value })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                  <div className="flex justify-end space-x-3 mt-6">
+                    <button
+                      onClick={() => setShowCreateModal(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                     >
-                      <option value="">Select category</option>
-                      {Object.values(productCategory).map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Product Image
-                    </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0]
-                        if (file) setImageFile(file)
-                      }}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
-                    />
-                  </div>
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={formData.inStock || false}
-                      onChange={(e) =>
-                        setFormData({ ...formData, inStock: e.target.checked })
-                      }
-                      className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
-                    />
-                    <label className="ml-2 block text-sm text-gray-900">
-                      In Stock
-                    </label>
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleCreate}
+                      disabled={createProductMutation.isPending}
+                      className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
+                    >
+                      {createProductMutation.isPending
+                        ? 'Creating...'
+                        : 'Create Product'}
+                    </button>
                   </div>
                 </div>
-                <div className="flex justify-end space-x-3 mt-6">
-                  <button
-                    onClick={() => setShowCreateModal(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleCreate}
-                    disabled={createProductMutation.isPending}
-                    className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
-                  >
-                    {createProductMutation.isPending
-                      ? 'Creating...'
-                      : 'Create Product'}
-                  </button>
-                </div>
-              </div>
+              </motion.div>
             </div>
-          </div>
-        )}
+          )}
+        </AnimatePresence>
 
         {/* Edit Product Modal */}
-        {showEditModal && selectedProduct && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-              <div className="mt-3">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Edit Product: {selectedProduct.product_name}
-                </h3>
-                <div className="space-y-4">
-                  {/* Product Name, Price, Category, Image, In Stock fields only */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Product Name
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.product_name || ''}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          product_name: e.target.value,
-                        })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Price
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={formData.price || ''}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          price: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Quantity
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      value={formData.quantity ?? ''}
-                      onChange={(e) => {
-                        const value = e.target.value
-                        setFormData({
-                          ...formData,
-                          quantity: value === '' ? undefined : parseInt(value, 10),
-                        })
-                      }}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Category
-                    </label>
-                    <select
-                      value={formData.category || ''}
-                      onChange={(e) =>
-                        setFormData({ ...formData, category: e.target.value })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
-                    >
-                      <option value="">Select category</option>
-                      {Object.values(productCategory).map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Product Image
-                    </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                        const file = e.target.files?.[0]
-                        if (file) {
-                          setFormData({ ...formData, image: file.name }) // Optionally update for display
-                          setImageFile(file) // Store the file for upload if needed
+        <AnimatePresence>
+          {showEditModal && selectedProduct && (
+            <div className="fixed inset-0 z-50 overflow-y-auto h-full w-full" style={{background: `url(${modalBg}) center center / cover no-repeat`}}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+              >
+                <div className="mt-3">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Edit Product: {selectedProduct.product_name}
+                  </h3>
+                  <div className="space-y-4">
+                    {/* Product Name, Price, Category, Image, In Stock fields only */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Product Name
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.product_name || ''}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            product_name: e.target.value,
+                          })
                         }
-                      }}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
-                    />
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Price
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.price || ''}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            price: parseFloat(e.target.value) || 0,
+                          })
+                        }
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Quantity
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={formData.quantity ?? ''}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          setFormData({
+                            ...formData,
+                            quantity: value === '' ? undefined : parseInt(value, 10),
+                          })
+                        }}
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Category
+                      </label>
+                      <select
+                        value={formData.category || ''}
+                        onChange={(e) =>
+                          setFormData({ ...formData, category: e.target.value })
+                        }
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                      >
+                        <option value="">Select category</option>
+                        {Object.values(productCategory).map((cat) => (
+                          <option key={cat} value={cat}>
+                            {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Product Image
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            setFormData({ ...formData, image: file.name }) // Optionally update for display
+                            setImageFile(file) // Store the file for upload if needed
+                          }
+                        }}
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-orange-500 focus:border-orange-500"
+                      />
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={formData.inStock || false}
+                        onChange={(e) =>
+                          setFormData({ ...formData, inStock: e.target.checked })
+                        }
+                        className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                      />
+                      <label className="ml-2 block text-sm text-gray-900">
+                        In Stock
+                      </label>
+                    </div>
                   </div>
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={formData.inStock || false}
-                      onChange={(e) =>
-                        setFormData({ ...formData, inStock: e.target.checked })
-                      }
-                      className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
-                    />
-                    <label className="ml-2 block text-sm text-gray-900">
-                      In Stock
-                    </label>
+                  <div className="flex justify-end space-x-3 mt-6">
+                    <button
+                      onClick={() => setShowEditModal(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleUpdate}
+                      disabled={updateProductMutation.isPending}
+                      className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
+                    >
+                      {updateProductMutation.isPending
+                        ? 'Updating...'
+                        : 'Update Product'}
+                    </button>
                   </div>
                 </div>
-                <div className="flex justify-end space-x-3 mt-6">
-                  <button
-                    onClick={() => setShowEditModal(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleUpdate}
-                    disabled={updateProductMutation.isPending}
-                    className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
-                  >
-                    {updateProductMutation.isPending
-                      ? 'Updating...'
-                      : 'Update Product'}
-                  </button>
-                </div>
-              </div>
+              </motion.div>
             </div>
-          </div>
-        )}
+          )}
+        </AnimatePresence>
 
         {/* Delete Confirmation Modal */}
-        {showDeleteModal && selectedProduct && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-              <div className="mt-3 text-center">
-                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                  <Trash2 className="h-6 w-6 text-red-600" />
+        <AnimatePresence>
+          {showDeleteModal && selectedProduct && (
+            <div className="fixed inset-0 z-50 overflow-y-auto h-full w-full" style={{background: `url(${modalBg}) center center / cover no-repeat`}}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+              >
+                <div className="mt-3 text-center">
+                  <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                    <Trash2 className="h-6 w-6 text-red-600" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mt-2">
+                    Delete Product
+                  </h3>
+                  <div className="mt-2 px-7 py-3">
+                    <p className="text-sm text-gray-500">
+                      Are you sure you want to delete product "
+                      {selectedProduct.product_name}"? This action cannot be
+                      undone.
+                    </p>
+                  </div>
+                  <div className="flex justify-center space-x-3 mt-4">
+                    <button
+                      onClick={() => setShowDeleteModal(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleDelete}
+                      disabled={deleteProductMutation.isPending}
+                      className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+                    >
+                      {deleteProductMutation.isPending ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </div>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mt-2">
-                  Delete Product
-                </h3>
-                <div className="mt-2 px-7 py-3">
-                  <p className="text-sm text-gray-500">
-                    Are you sure you want to delete product "
-                    {selectedProduct.product_name}"? This action cannot be
-                    undone.
-                  </p>
-                </div>
-                <div className="flex justify-center space-x-3 mt-4">
-                  <button
-                    onClick={() => setShowDeleteModal(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    disabled={deleteProductMutation.isPending}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
-                  >
-                    {deleteProductMutation.isPending ? 'Deleting...' : 'Delete'}
-                  </button>
-                </div>
-              </div>
+              </motion.div>
             </div>
-          </div>
-        )}
+          )}
+        </AnimatePresence>
       </>
     </LayoutWithSidebar>
   )

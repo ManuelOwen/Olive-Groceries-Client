@@ -89,7 +89,7 @@ const ChatInterface: React.FC = () => {
       login: '/login',
       contact: '/contact',
       about: '/about',
-      // Add more as needed
+      
     };
     const navMatch = userInput.match(/(?:go to|open|show me|take me to) ([\w- ]+)/i);
     if (navMatch) {

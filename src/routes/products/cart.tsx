@@ -1,7 +1,7 @@
 import { useCartStore } from '@/stores/cartStore';
 import { useNavigate, createFileRoute } from '@tanstack/react-router';
 import { useAuthStore } from '@/stores/authStore';
-import { checkoutCart } from '@/stores/cartStore';
+
 
 export const Route = createFileRoute('/products/cart')({
   component: CartPage,

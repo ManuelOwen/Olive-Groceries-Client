@@ -1,5 +1,7 @@
 import type { TOrders } from '@/interfaces/orderInterface'
 import { authenticatedFetch } from '@/lib/utils'
+import { getToken } from '@/stores/authStore'
+
 
 const url = '/api/v1'
 
@@ -150,7 +152,6 @@ export const updateDelivery = async (
   }
 
   // Debug: Get token from store
-  const { getToken } = await import('@/stores/authStore')
   const token = getToken()
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',

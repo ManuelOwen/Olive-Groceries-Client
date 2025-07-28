@@ -110,7 +110,7 @@ function DeliveriesComponent() {
                     <>
                       <button
                         onClick={() => handleEditSave(delivery.id)}
-                        className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+                        className="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600"
                         disabled={updateOrder.isPending}
                       >
                         Save
@@ -126,7 +126,7 @@ function DeliveriesComponent() {
                     <>
                       <button
                         onClick={() => handleEdit(delivery)}
-                        className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                        className="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600"
                       >
                         Edit
                       </button>

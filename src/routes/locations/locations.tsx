@@ -1,8 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import {
   getCounties,
-  county,
-  search,
+ 
   getLocalitiesInCounty,
   getAreasInLocality,
 } from 'kenya-locations'

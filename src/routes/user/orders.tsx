@@ -6,6 +6,10 @@ import type { TOrders } from '@/interfaces/orderInterface';
 import { getOrdersByUserId } from '@/api/orders';
 import  { useState } from 'react';
 import type { CartItem } from '@/stores/cartStore';
+import { motion, AnimatePresence } from 'framer-motion';
+import modalBg from '@/images/bg.jpeg';
+import { getUserById, getDriverForOrder } from '@/api/users';
+import { useEffect } from 'react';
 
 export const Route = createFileRoute('/user/orders')({
   component: RouteComponent,
@@ -15,6 +19,7 @@ function RouteComponent() {
   const { user, token } = useAuthStore();
   const userId = user?.id as string | number | undefined;
   const [selectedOrder, setSelectedOrder] = useState<TOrders | null>(null);
+  const [driverInfo, setDriverInfo] = useState<any>(null);
 
   console.log('RouteComponent user/token:', { user, token, userId }); // Debug log
 
@@ -28,6 +33,33 @@ function RouteComponent() {
     queryFn: () => userId ? getOrdersByUserId(userId) : Promise.resolve([]),
     enabled: !!userId,
   });
+
+  // Fetch driver info when selectedOrder changes and has assigned_driver_id
+  useEffect(() => {
+    if (selectedOrder && selectedOrder.assigned_driver_id) {
+      // First check if driver info is already included in the order response
+      if (selectedOrder.assigned_driver && selectedOrder.assigned_driver.fullName) {
+        setDriverInfo(selectedOrder.assigned_driver);
+      } else {
+        // Fallback to API call
+        const driverId = selectedOrder.assigned_driver_id;
+        getDriverForOrder(driverId, selectedOrder.id)
+          .then((response) => {
+            if (response.success && response.data) {
+              setDriverInfo(response.data);
+            } else {
+              setDriverInfo(null);
+            }
+          })
+          .catch((error) => {
+            console.log('Failed to fetch driver info:', error);
+            setDriverInfo(null);
+          });
+      }
+    } else {
+      setDriverInfo(null);
+    }
+  }, [selectedOrder]);
 
   // Helper functions for item details
   const getProductName = (item: CartItem) => {
@@ -121,16 +153,23 @@ function RouteComponent() {
       )}
 
       {/* Order Details Modal/Section */}
-      {selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative border-2 border-orange-400">
-            <button
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-              onClick={() => setSelectedOrder(null)}
+      <AnimatePresence>
+        {selectedOrder && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center" style={{background: `url(${modalBg}) center center / cover no-repeat`}}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+              className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative border-2 border-orange-400"
             >
-              &times;
-            </button>
-            <h2 className="text-xl font-semibold mb-4 text-gray-900">Order Details (#{selectedOrder.order_number || selectedOrder.id})</h2>
+              <button
+                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                onClick={() => setSelectedOrder(null)}
+              >
+                &times;
+              </button>
+              <h2 className="text-xl font-semibold mb-4 text-gray-900">Order Details (#{selectedOrder.order_number || selectedOrder.id})</h2>
             
             {/* Order Status */}
             <div className="mb-4">
@@ -157,6 +196,20 @@ function RouteComponent() {
                 <span className="text-gray-600">Shipping Address:</span>
                 <p className="mt-1 font-medium">{getShippingAddress(selectedOrder)}</p>
               </div>
+            </div>
+
+            {/* Assigned Driver Info (always show section) */}
+            <div className="mb-6 p-4 bg-orange-50 rounded-lg border border-orange-200">
+              <h4 className="font-semibold text-orange-600 mb-2">Assigned Driver</h4>
+              {selectedOrder.assigned_driver_id && driverInfo ? (
+                <>
+                  <div className="text-gray-800">Name: <span className="font-bold">{driverInfo.fullName || driverInfo.email}</span></div>
+                  <div className="text-gray-800">Phone: <span className="font-bold">{driverInfo.phoneNumber || 'N/A'}</span></div>
+                  <div className="text-gray-800">Email: <span className="font-bold">{driverInfo.email}</span></div>
+                </>
+              ) : (
+                <div className="text-gray-500">No driver assigned yet.</div>
+              )}
             </div>
 
             {/* Order Items */}
@@ -217,9 +270,10 @@ function RouteComponent() {
                 }
               })()}
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
+    </AnimatePresence>
     </div>
   );
 }

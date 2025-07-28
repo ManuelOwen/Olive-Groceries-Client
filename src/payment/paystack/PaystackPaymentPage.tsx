@@ -5,6 +5,8 @@ import { useAuthStore } from '@/stores/authStore'
 import { createOrder } from '@/api/orders'
 import { OrderStatus } from '@/interfaces/orderInterface'
 import { createPayment } from '@/api/payments'
+import { sendOrderConfirmationEmail } from '@/api/email'
+import { useNavigate } from '@tanstack/react-router';
 
 const PaystackPaymentPage: React.FC = () => {
   const [location, setLocation] = useState<any>(null)
@@ -12,6 +14,7 @@ const PaystackPaymentPage: React.FC = () => {
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const clearCart = useCartStore((state) => state.clearCart)
   const user = useAuthStore((state) => state.user)
+  const navigate = useNavigate();
 
   useEffect(() => {
     const stored = localStorage.getItem('selectedLocation')
@@ -53,8 +56,30 @@ const PaystackPaymentPage: React.FC = () => {
         order_id: order.id,
         status: 'completed',
       })
+
+      // Send order confirmation email
+      try {
+        await sendOrderConfirmationEmail({
+          userEmail: user.email,
+          userName: user.fullName || user.email,
+          orderNumber: order.order_number || order.id.toString(),
+          orderItems: items.map(item => ({
+            product_name: item.product_name,
+            price: item.price,
+            quantity: item.quantity,
+          })),
+          totalAmount: total,
+          shippingAddress: location?.shippingAddress || '',
+          estimatedDeliveryTime: '2 hours',
+        });
+      } catch (emailError) {
+        console.error('Failed to send confirmation email:', emailError);
+        // Don't fail the entire process if email fails
+      }
+
       clearCart()
-      alert('Payment complete! Reference: ' + transaction.reference + '\nOrder confirmed, payment recorded, and cart cleared.')
+      alert('Payment complete! Reference: ' + transaction.reference + '\nOrder confirmed, payment recorded, and cart cleared.\nYou will receive a confirmation email shortly.')
+      navigate({ to: '/products' });
       // Optionally, redirect or show a success page here
     } catch (err: any) {
       // Check for 403 Forbidden error

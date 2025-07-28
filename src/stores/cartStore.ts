@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getOrdersByUserId, createOrder, updateOrder } from '@/api/orders';
+import { createOrder} from '@/api/orders';
 import { useAuthStore } from './authStore';
 import { OrderStatus } from '@/interfaces/orderInterface';
 
@@ -24,7 +24,7 @@ function getCartStorageKey(userId: string | number | undefined) {
   return userId ? `cart-items-${userId}` : 'cart-items-guest';
 }
 
-export const useCartStore = create<CartState>((set, get) => ({
+export const useCartStore = create<CartState>((set) => ({
   items: [],
   addToCart: (item) => {
     set((state) => {

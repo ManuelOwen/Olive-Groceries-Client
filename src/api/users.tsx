@@ -104,11 +104,26 @@ export const getAllUsers = async (): Promise<TUser[]> => {
 }
 
 // Get user by user id
-export const getUserById = async (id: number | string): Promise<TUser> => {
-  const response = await authenticatedFetch(`${url}/users/${id}`)
-  await handleResponseApi(response)
-  return response.json()
-}
+export const getUserById = async (userId: number): Promise<any> => {
+  const response = await authenticatedFetch(`/api/v1/users/${userId}`, {
+    method: 'GET',
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch user');
+  }
+  return response.json();
+};
+
+export const getDriverForOrder = async (driverId: number, orderId: number): Promise<any> => {
+  const response = await authenticatedFetch(`/api/v1/users/driver/${driverId}/for-order/${orderId}`, {
+    method: 'GET',
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Failed to fetch driver information');
+  }
+  return response.json();
+};
 
 // Create a new user
 export const createUser = async (userData: TUserRegister): Promise<TUser> => {

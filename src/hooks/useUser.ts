@@ -1,6 +1,8 @@
 import { registerUser, loginUser } from '@/components/api/auth';
 import { useMutation, type UseMutationResult, useQueryClient, useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { API_URL } from '@/components/api/url';
+import { getToken } from '@/stores/authStore'
+
 // import { createUserApi } from '@/components/'; 
 
 // Define the type for the user data
@@ -47,8 +49,7 @@ export const useLoginUser = (): UseMutationResult<TUser, Error, TUserLogin> => {
       if (result && typeof result.token === 'string' && result.token) {
         return result;
       } else {
-        // Try to get token from store if not present
-        const { getToken } = await import('@/stores/authStore');
+      
         const token = getToken() || '';
         return { ...result, token } as TUser;
       }
@@ -165,7 +166,7 @@ export const useGetUser = (userId: string): UseQueryResult<TUser, Error> => {
       console.log('useGetUser - Fetching user with ID:', userId);
 
       // Add Authorization header
-      const { getToken } = await import('@/stores/authStore');
+  
       const token = getToken();
       console.log('useGetUser - Token:', token ? 'Present' : 'Missing');
 
@@ -205,7 +206,7 @@ export const useGetUser = (userId: string): UseQueryResult<TUser, Error> => {
     enabled: !!userId,
   });
 };
-export const useUpdateUser = (): UseMutationResult<TUser, Error, { id: string; user: TUser }> => {
+export const useUpdateUser = (): UseMutationResult<TUser, Error, { id:string; user: TUser }> => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, user }: { id: string; user: TUser }) => {
@@ -217,7 +218,7 @@ export const useUpdateUser = (): UseMutationResult<TUser, Error, { id: string; u
       console.log('[UpdateUser] Cleaned user data:', userData);
 
       // Debug: Get token from store
-      const { getToken } = await import('@/stores/authStore');
+     
       const token = getToken();
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -276,7 +277,7 @@ export const useDeleteUser = (): UseMutationResult<void, Error, string> => {
   return useMutation({
     mutationFn: async (id: string) => {
       // Debug: Get token from store
-      const { getToken } = await import('@/stores/authStore');
+    
       const token = getToken();
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',

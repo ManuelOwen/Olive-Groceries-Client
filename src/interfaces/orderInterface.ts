@@ -1,10 +1,11 @@
+import { assignDeliveryToDriver } from '../api/deliveries';
 export enum OrderStatus {
-  PENDING = 'pending',
-  CONFIRMED = 'confirmed',
-  PROCESSING = 'processing',
-  SHIPPED = 'shipped',
-  DELIVERED = 'delivered',
-  CANCELLED = 'cancelled',
+    PENDING = 'pending',
+    CONFIRMED = 'confirmed',
+    PROCESSING = 'processing',
+    SHIPPED = 'shipped',
+    DELIVERED = 'delivered',
+    CANCELLED = 'cancelled',
 }
 export enum OrderPriority {
     Low = "low",
@@ -31,13 +32,13 @@ export interface TOrders {
     id: number;
     order_number: string;
     total_amount: number;
-    status:OrderStatus;
+    status: OrderStatus;
     priority: string;
     shipping_address: string;
     billing_address: string;
     shipped_at: Date;
     delivered_at: string | null;
-    created_at: string; 
+    created_at: string;
     user_id: number;
     user?: {
         id: number;
@@ -45,6 +46,8 @@ export interface TOrders {
         email: string;
     };
     items?: any[];
+
+    assigned_driver_id: number | null; // Optional driver assignment
 }
 
 export enum productCategory {

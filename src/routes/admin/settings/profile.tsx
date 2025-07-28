@@ -14,6 +14,7 @@ import {
 import { LayoutWithSidebar } from '@/components/LayoutWithSidebar'
 import { motion } from 'framer-motion'
 import { logoutUser } from '@/lib/utils'
+import { getToken } from '@/stores/authStore'
 
 export const Route = createFileRoute('/admin/settings/profile')({
   component: ProfilePage,
@@ -114,7 +115,7 @@ function ProfilePage() {
       }
 
       console.log('Updating user with payload:', payload)
-      const { getToken } = await import('@/stores/authStore')
+     
       const token = getToken()
       console.log('Token being sent:', token)
 
@@ -127,9 +128,8 @@ function ProfilePage() {
         console.warn('No token found! User is not authenticated.')
       }
       await updateUser.mutateAsync({
-        id: user.id,
+        id: String(user.id),
         user: payload as any,
-        headers,
       })
       updateUserStore(payload)
       toast.success('Profile updated successfully!')
@@ -167,7 +167,7 @@ function ProfilePage() {
     )
       return
     try {
-      await deleteUserMutation.mutateAsync(user.id)
+      await deleteUserMutation.mutateAsync(user.id.toString())
       toast.success('Account deleted.')
       logoutUser()
       window.location.href = '/login'
