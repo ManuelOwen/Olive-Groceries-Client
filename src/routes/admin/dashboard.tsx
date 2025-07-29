@@ -32,7 +32,9 @@ function RouteComponent() {
     queryKey: ['payments'],
     queryFn: async () => {
       try {
-        const res = await authenticatedFetch('/api/v1/payments');
+        const res = await authenticatedFetch(
+          'https://groceries-api-m1sq.onrender.com/api/v1/payments',
+        )
         if (!res.ok) return [];
         const data = await res.json();
         if (Array.isArray(data)) return data;
