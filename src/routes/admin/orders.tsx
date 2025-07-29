@@ -107,20 +107,27 @@ function AdminOrdersComponent() {
       })
       .catch(console.error)
   }, [])
+  
 
   // Assign driver handler
-  const handleAssignDriver = async (orderId: number, driverId: number) => {
+   const handleAssignDriver = async (
+    orderId: number,
+    driverId: number,
+  ) => {
     setAssigningOrderId(orderId)
     setAssigningDriverId(driverId)
     try {
-      const response = await fetch(`/api/v1/orders/${orderId}/assign-driver`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      const response = await fetch(
+        `https://groceries-api-m1sq.onrender.com/api/v1/orders/${orderId}/assign-driver`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ driver_id: driverId }),
         },
-        body: JSON.stringify({ driver_id: driverId }),
-      })
+      )
       const data = await response.json()
       if (data.success) {
         toast.success('Driver assigned successfully!')
