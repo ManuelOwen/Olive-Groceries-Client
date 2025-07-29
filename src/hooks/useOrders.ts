@@ -7,10 +7,15 @@ import type { OrderStatus, TOrders } from '@/interfaces/orderInterface';
 export const orderService = () => {
     const { data, isLoading, isError, error } = useQuery({
         queryKey: ['orders'],
-        queryFn: getAllOrdersWithoutAuth, 
-        // refetchOnWindowFocus: false,
+        queryFn: async () => {
+            const raw = await getAllOrdersWithoutAuth();
+            // Defensive: If the API returns an object, try to extract array
+            if (Array.isArray(raw)) return raw;
+            if (raw && Array.isArray(raw.data)) return raw.data;
+            if (raw && Array.isArray(raw.orders)) return raw.orders;
+            return [];
+        },
     });
-
     return { data, isLoading, isError, error };
 }
 // Fetch orders assigned to a driver with better error handling

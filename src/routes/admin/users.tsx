@@ -243,24 +243,6 @@ function AdminUsersComponent() {
     )
   }
 
-  // Check if users is not an array (API returned unexpected data)
-  if (!Array.isArray(users)) {
-    return (
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-        <h3 className="text-lg font-medium text-yellow-800 mb-2">
-          Unexpected Data Format
-        </h3>
-        <p className="text-yellow-600">
-          The API returned unexpected data. Expected an array of users, but got:{' '}
-          {typeof users}
-        </p>
-        <pre className="mt-2 p-2 bg-gray-100 rounded text-xs overflow-auto">
-          {JSON.stringify(users, null, 2)}
-        </pre>
-      </div>
-    )
-  }
-
   return (
     <LayoutWithSidebar>
       <div className="p-6">

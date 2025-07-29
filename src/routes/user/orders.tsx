@@ -268,10 +268,6 @@ function RouteComponent() {
                         Email:{' '}
                         <span className="font-bold">{driverInfo.email || 'N/A'}</span>
                       </div>
-                      {/* Debug info - remove in production */}
-                      <div className="text-xs text-gray-500 mt-2">
-                        Driver ID: {selectedOrder.assigned_driver_id}
-                      </div>
                     </>
                   ) : (
                     <div className="text-gray-500">Loading driver information...</div>

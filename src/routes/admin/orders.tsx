@@ -117,17 +117,14 @@ function AdminOrdersComponent() {
     setAssigningOrderId(orderId)
     setAssigningDriverId(driverId)
     try {
-      const response = await fetch(
-        `https://groceries-api-m1sq.onrender.com/api/v1/orders/${orderId}/assign-driver`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({ driver_id: driverId }),
+      const response = await fetch(`https://groceries-api-m1sq.onrender.com/api/v1/orders/${orderId}/assign-driver`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-      )
+        body: JSON.stringify({ driver_id: driverId }),
+      })
       const data = await response.json()
       if (data.success) {
         toast.success('Driver assigned successfully!')
@@ -357,26 +354,6 @@ function AdminOrdersComponent() {
           <p className="text-red-600">
             {error?.message || 'An unexpected error occurred'}
           </p>
-        </div>
-      </LayoutWithSidebar>
-    )
-  }
-
-  // Check if orders is not an array (API returned unexpected data)
-  if (!Array.isArray(orders)) {
-    return (
-      <LayoutWithSidebar>
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-yellow-800 mb-2">
-            Unexpected Data Format
-          </h3>
-          <p className="text-yellow-600">
-            The API returned unexpected data. Expected an array of orders, but
-            got: {typeof orders}
-          </p>
-          <pre className="mt-2 p-2 bg-gray-100 rounded text-xs overflow-auto">
-            {JSON.stringify(orders, null, 2)}
-          </pre>
         </div>
       </LayoutWithSidebar>
     )

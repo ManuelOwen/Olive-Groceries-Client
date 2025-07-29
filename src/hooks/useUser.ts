@@ -103,12 +103,15 @@ export const userService = () => {
       if (data.data && Array.isArray(data.data)) {
         return data.data;
       }
-
       // Handle direct array response
       if (Array.isArray(data)) {
         return data;
       }
-
+      // Defensive: If the API returns an object with users array
+      if (data && Array.isArray(data.users)) {
+        return data.users;
+      }
+      // If not an array, return empty array
       return [];
     },
   });

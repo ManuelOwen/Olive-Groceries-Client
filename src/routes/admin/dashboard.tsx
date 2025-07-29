@@ -96,7 +96,7 @@ function RouteComponent() {
   };
 
   // Orders Line Chart (by created_at date)
-  const orderDates = orders.map(o => o.created_at ? new Date(o.created_at).toLocaleDateString() : 'unknown');
+  const orderDates = orders.map((o: any) => o.created_at ? new Date(o.created_at).toLocaleDateString() : 'unknown');
   const orderDateCounts = orderDates.reduce((acc: Record<string, number>, date: string) => {
     acc[date] = (acc[date] || 0) + 1;
     return acc;
