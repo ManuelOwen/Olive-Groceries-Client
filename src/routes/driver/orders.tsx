@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useDriverDeliveries, useUpdateOrder, useDeleteOrder } from '@/hooks/useOrders';
 import { useAuthStore } from '@/stores/authStore';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export const Route = createFileRoute('/driver/orders')({
   component: OrdersComponent,
@@ -16,6 +16,31 @@ function OrdersComponent() {
   const deleteOrder = useDeleteOrder();
   const [editId, setEditId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<any>({});
+  const [driverOrders, setDriverOrders] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Fetch user from local storage
+    const userStr = localStorage.getItem('auth');
+    let user = null;
+    try {
+      user = userStr ? JSON.parse(userStr).user : null;
+    } catch (e) {
+      user = null;
+    }
+    if (user && user.role === 'driver') {
+      // Fetch all orders from local storage (simulate API or use actual API if available)
+      const ordersStr = localStorage.getItem('orders');
+      let orders: any[] = [];
+      try {
+        orders = ordersStr ? JSON.parse(ordersStr) : [];
+      } catch (e) {
+        orders = [];
+      }
+      // Filter orders assigned to this driver
+      const assignedOrders = orders.filter((order: any) => order.assigned_driver_id === user.id);
+      setDriverOrders(assignedOrders);
+    }
+  }, []);
 
   // Debug logs
   console.log('Driver ID:', driverId);
@@ -64,14 +89,14 @@ function OrdersComponent() {
             </tr>
           </thead>
           <tbody>
-            {deliveries.length === 0 ? (
+            {driverOrders.length === 0 ? (
               <tr>
                 <td colSpan={4} className="text-center py-6 text-gray-500 bg-orange-50">
                   No orders found.
                 </td>
               </tr>
             ) : (
-              deliveries.map((delivery: any, idx: number) => (
+              driverOrders.map((delivery: any, idx: number) => (
                 <tr key={delivery.id} className={idx % 2 === 0 ? 'bg-orange-50' : 'bg-white'}>
                   <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900 border-b">{delivery.order_number}</td>
                   <td className="px-6 py-4 whitespace-nowrap border-b">

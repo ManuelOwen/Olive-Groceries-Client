@@ -1,0 +1,20 @@
+import type { TOrders } from '@/interfaces/orderInterface';
+
+export const getAllDeliveriesWithoutAuth = async (): Promise<TOrders[]> => [];
+export const getDeliveryById = async (_id: string | number): Promise<TOrders | undefined> => undefined;
+export const createDelivery = async (_delivery: TOrders): Promise<TOrders> => ({} as TOrders);
+export const updateDelivery = async (_id: string | number, _delivery: any): Promise<TOrders> => ({} as TOrders);
+export const deleteDelivery = async (_id: string | number): Promise<void> => {};
+export const getDeliveriesByDriverId = async (_driverId: string | number): Promise<TOrders[]> => [];
+export const getDeliveriesByStatus = async (_status: string): Promise<TOrders[]> => [];
+export const getDeliveriesByPriority = async (_priority: string): Promise<TOrders[]> => [];
+export const getDeliveriesByUserId = async (_userId: string | number): Promise<TOrders[]> => [];
+export const assignDeliveryToDriver = async (_deliveryId: string, _driverId: string): Promise<TOrders> => ({} as TOrders);
+export const markDeliveryAsPickedUp = async (_id: string): Promise<TOrders> => ({} as TOrders);
+export const markDeliveryAsInTransit = async (_id: string): Promise<TOrders> => ({} as TOrders);
+export const markDeliveryAsDelivered = async (_id: string, _deliveryNote?: string): Promise<TOrders> => ({} as TOrders);
+export const markDeliveryAsFailed = async (_id: string, _failureReason: string): Promise<TOrders> => ({} as TOrders);
+export const updateDeliveryLocation = async (_id: string, _latitude: number, _longitude: number): Promise<TOrders> => ({} as TOrders);
+export const getActiveDeliveriesForDriver = async (_driverId: string | number): Promise<TOrders[]> => [];
+export const getCompletedDeliveriesForDriver = async (_driverId: string | number, _dateFrom?: string, _dateTo?: string): Promise<TOrders[]> => [];
+export const getDeliveryRoute = async (_id: string | number): Promise<any> => ({}); 

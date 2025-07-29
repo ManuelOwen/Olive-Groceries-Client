@@ -157,17 +157,33 @@ const ChatInterface: React.FC = () => {
     setMessages((prev) => [...prev, userMessage])
     setInput('')
     setIsLoading(true)
+    // Add loading message
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `msg_${Date.now()}_loading`,
+        role: 'assistant',
+        content: 'Thinking... 🤔',
+        timestamp: new Date(),
+      },
+    ])
     try {
       const aiContent = await handleAIAction(input)
-      const assistantMessage: Message = {
-        id: `msg_${Date.now()}_assistant`,
-        role: 'assistant',
-        content: aiContent,
-        timestamp: new Date(),
-      }
-      setMessages((prev) => [...prev, assistantMessage])
+      // Add a 1 second delay before showing the response
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Remove the loading message and add the real response
+      setMessages((prev) => [
+        ...prev.filter((msg) => !msg.id.endsWith('_loading')),
+        {
+          id: `msg_${Date.now()}_assistant`,
+          role: 'assistant',
+          content: aiContent,
+          timestamp: new Date(),
+        },
+      ])
     } catch (e) {
       toast.error('AI error.')
+      setMessages((prev) => prev.filter((msg) => !msg.id.endsWith('_loading')))
     } finally {
       setIsLoading(false)
     }

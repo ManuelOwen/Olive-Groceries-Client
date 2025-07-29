@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useAuthStore } from '@/stores/authStore';
 import { useDriverDeliveries, useUpdateOrder, useDeleteOrder } from '@/hooks/useOrders';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { TOrders } from '@/interfaces/orderInterface';
 
 export const Route = createFileRoute('/driver/dashboard')({
@@ -12,16 +12,41 @@ function RouteComponent() {
   const { user } = useAuthStore();
   const driverId = user?.id;
   const isDriverIdValid = typeof driverId === 'string' || typeof driverId === 'number';
-  const { data: orders = [], isLoading, isError, error } = useDriverDeliveries(isDriverIdValid ? driverId : '');
+  const { isLoading, isError, error } = useDriverDeliveries(isDriverIdValid ? driverId : '');
   const updateOrder = useUpdateOrder();
   const deleteOrder = useDeleteOrder();
   const [editId, setEditId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<any>({});
+  const [driverOrders, setDriverOrders] = useState<TOrders[]>([]);
+
+  useEffect(() => {
+    // Fetch user from local storage
+    const userStr = localStorage.getItem('auth');
+    let user = null;
+    try {
+      user = userStr ? JSON.parse(userStr).user : null;
+    } catch (e) {
+      user = null;
+    }
+    if (user && user.role === 'driver') {
+      // Fetch all orders from local storage (simulate API or use actual API if available)
+      const ordersStr = localStorage.getItem('orders');
+      let orders: TOrders[] = [];
+      try {
+        orders = ordersStr ? JSON.parse(ordersStr) : [];
+      } catch (e) {
+        orders = [];
+      }
+      // Filter orders assigned to this driver
+      const assignedOrders = orders.filter((order: any) => order.assigned_driver_id === user.id);
+      setDriverOrders(assignedOrders);
+    }
+  }, []);
 
   // Group orders by status
-  const toDeliver = orders.filter((order: TOrders) => order.status !== 'delivered' && order.status !== 'cancelled');
-  const delivered = orders.filter((order: TOrders) => order.status === 'delivered');
-  const existing = orders; // All orders
+  const toDeliver = driverOrders.filter((order: TOrders) => order.status !== 'delivered' && order.status !== 'cancelled');
+  const delivered = driverOrders.filter((order: TOrders) => order.status === 'delivered');
+  const existing = driverOrders; // All orders
 
   const handleEdit = (order: TOrders) => {
     setEditId(order.id);
