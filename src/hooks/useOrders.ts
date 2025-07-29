@@ -8,7 +8,7 @@ export const orderService = () => {
     const { data, isLoading, isError, error } = useQuery({
         queryKey: ['orders'],
         queryFn: async () => {
-            const raw = await getAllOrdersWithoutAuth();
+            const raw: any = await getAllOrdersWithoutAuth();
             // Defensive: If the API returns an object, try to extract array
             if (Array.isArray(raw)) return raw;
             if (raw && Array.isArray(raw.data)) return raw.data;
